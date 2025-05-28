@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dalchini Tomintoul - Reservation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Georgia", serif;
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+          url("https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg");
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        color: white;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 50px 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 60px;
+        background-image: "https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg";
+      }
+
+      .header h1 {
+        font-size: 3.5rem;
+        font-weight: 300;
+        letter-spacing: 3px;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .header h2 {
+        font-size: 1.8rem;
+        font-weight: 400;
+        margin-bottom: 30px;
+        color: #e8e8e8;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        max-width: 800px;
+        margin: 0 auto;
+        color: #d0d0d0;
+        font-style: italic;
+      }
+
+      .form-container {
+        background: rgba(7, 27, 13, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 50px 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 30px 25px;
+        margin-bottom: 50px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-group.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .form-group.two-col {
+        grid-column: span 2;
+      }
+
+      .form-label {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+        color: #f5f5f5;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+      }
+
+      .form-input {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1.5px solid rgba(255, 255, 255, 0.25);
+        border-radius: 10px;
+        padding: 16px 18px;
+        font-size: 1rem;
+        color: white;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        height: 50px;
+      }
+
+      .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #d4af37;
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+      }
+
+      .submit-btn {
+        background: linear-gradient(45deg, #d4af37, #f4e8a6);
+        color: #2c3e50;
+        border: none;
+        padding: 18px 50px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        margin: 0 auto;
+        display: block;
+        min-width: 200px;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.45);
+        background: linear-gradient(45deg, #f4e8a6, #d4af37);
+      }
+
+      .submit-btn:active {
+        transform: translateY(0px);
+      }
+
+      /* Status Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        overflow-y: auto;
+      }
+
+      .modal-content {
+        background: linear-gradient(
+          135deg,
+          rgba(20, 20, 20, 0.95),
+          rgba(40, 40, 40, 0.95)
+        );
+        margin: 5% auto;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        text-align: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.3s ease-out;
+        position: relative;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .status-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+      }
+
+      .status-title {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        font-weight: 300;
+      }
+
+      .status-message {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        color: #d0d0d0;
+      }
+
+      .status-on-hold {
+        color: #f39c12;
+      }
+
+      .status-confirmed {
+        color: #27ae60;
+      }
+
+      .status-rejected {
+        color: #e74c3c;
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 12px 30px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .email-verification {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        text-align: center;
+        animation: emailSent 0.5s ease-out;
+      }
+
+      @keyframes emailSent {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .email-preview {
+        background: white;
+        color: #333;
+        padding: 30px;
+        border-radius: 10px;
+        margin: 20px 0;
+        border-left: 5px solid #d4af37;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        font-family: Arial, sans-serif;
+      }
+
+      .email-header {
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+      }
+
+      .email-subject {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .email-from {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+      }
+
+      .email-body {
+        line-height: 1.6;
+        color: #2c3e50;
+      }
+
+      .email-button {
+        background: #d4af37;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        margin: 15px 0;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .reservation-details {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border-left: 3px solid #d4af37;
+      }
+
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 25px 20px;
+        }
+
+        .form-group.two-col {
+          grid-column: span 2;
+        }
+
+        .header h1 {
+          font-size: 2.5rem;
+        }
+
+        .form-container {
+          padding: 35px 25px;
+          max-width: 95%;
+        }
+
+        .modal-content {
+          margin: 2% auto;
+          width: 95%;
+          max-height: 95vh;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        .form-group.two-col {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Reservation</h1>
+        <h2>Booking Table For Family Member</h2>
+        <p>
+          From a relaxed dinner with friends to a cosy night in, Dalchini
+          Tomintoul is here to serve. Enjoy our delicious dishes in the warm and
+          welcoming ambience of our dining area, or take your favourites home
+          with our efficient takeaway service
+        </p>
+      </div>
+
+      <form id="reservationForm" class="form-container">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="Your Name"
+              id="name"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input
+              type="tel"
+              class="form-input"
+              placeholder="Telephone"
+              id="phone"
+              maxlength="10"
+              pattern="[0-9]{10}"
+              title="Please enter exactly 10 digits"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="your.email@example.com"
+              id="email"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Guests</label>
+            <input
+              type="number"
+              class="form-input"
+              placeholder="Number of Guests"
+              id="persons"
+              min="1"
+              max="20"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="date" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input type="time" class="form-input" id="startTime" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">End Time</label>
+            <input type="time" class="form-input" id="endTime" required />
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Book A Table</button>
+      </form>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="modal">
+      <div class="modal-content">
+        <div
+          id="emailVerification"
+          class="email-verification"
+          style="display: none"
+        >
+          <h3>📧 Email Verification Sent!</h3>
+          <p>
+            We've sent a verification email to <strong id="userEmail"></strong>
+          </p>
+          <p>
+            Please check your inbox and verify your email to complete the
+            reservation process.
+          </p>
+        </div>
+
+        <div id="emailPreview" class="email-preview" style="display: none">
+          <div class="email-header">
+            <div class="email-subject">
+              Dalchini Tomintoul - Email Verification Required
+            </div>
+            <div class="email-from">
+              From: reservations@dalchinitomintoul.com
+            </div>
+          </div>
+          <div class="email-body">
+            <p>Dear <span id="emailCustomerName"></span>,</p>
+            <p>
+              Thank you for choosing Dalchini Tomintoul! To complete your
+              reservation, please verify your email address by clicking the
+              button below:
+            </p>
+
+            <button class="email-button" onclick="verifyEmail()">
+              Verify Email Address
+            </button>
+
+            <div class="reservation-details">
+              <strong>Your Reservation Details:</strong><br />
+              <strong>Name:</strong> <span id="emailReservationName"></span
+              ><br />
+              <strong>Date:</strong> <span id="emailReservationDate"></span
+              ><br />
+              <strong>Time:</strong> <span id="emailReservationTime"></span
+              ><br />
+              <strong>Guests:</strong> <span id="emailReservationGuests"></span
+              ><br />
+              <strong>Phone:</strong> <span id="emailReservationPhone"></span>
+            </div>
+
+            <p>
+              Once verified, you'll receive a final confirmation with your
+              reservation status.
+            </p>
+            <p>
+              If you didn't make this reservation, please ignore this email.
+            </p>
+
+            <p>
+              Best regards,<br />
+              <strong>Dalchini Tomintoul Team</strong><br />
+              Phone: +44 1807 580 777<br />
+              Email: reservations@dalchinitomintoul.com
+            </p>
+          </div>
+        </div>
+
+        <div id="statusContent">
+          <div id="statusIcon" class="status-icon"></div>
+          <h2 id="statusTitle" class="status-title"></h2>
+          <p id="statusMessage" class="status-message"></p>
+        </div>
+
+        <button class="close-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+
+    <script>
+      // Real-time phone number validation
+      document.getElementById("phone").addEventListener("input", function (e) {
+        // Remove any non-digit characters
+        this.value = this.value.replace(/[^0-9]/g, "");
+
+        // Limit to 10 digits
+        if (this.value.length > 10) {
+          this.value = this.value.slice(0, 10);
+        }
+      });
+
+      // Real-time email validation visual feedback
+      document.getElementById("email").addEventListener("blur", function (e) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (this.value && !emailRegex.test(this.value)) {
+          this.style.borderColor = "#e74c3c";
+          this.style.boxShadow = "0 0 15px rgba(231, 76, 60, 0.25)";
+        } else if (this.value) {
+          this.style.borderColor = "#27ae60";
+          this.style.boxShadow = "0 0 15px rgba(39, 174, 96, 0.25)";
+        } else {
+          this.style.borderColor = "rgba(255, 255, 255, 0.25)";
+          this.style.boxShadow = "none";
+        }
+      });
+
+      // Reset email field styling on focus
+      document.getElementById("email").addEventListener("focus", function (e) {
+        this.style.borderColor = "#d4af37";
+        this.style.boxShadow = "0 0 15px rgba(212, 175, 55, 0.25)";
+      });
+
+      // Reservation statuses and messages
+      const statusOptions = [
+        {
+          status: "on-hold",
+          icon: "⏳",
+          title: "Reservation On Hold",
+          message:
+            "Thank you for your reservation request! We have received your booking and it is currently being reviewed by our team. You will receive a confirmation email within 2-4 hours.",
+          class: "status-on-hold",
+        },
+        {
+          status: "confirmed",
+          icon: "✅",
+          title: "Reservation Confirmed",
+          message:
+            "Excellent! Your table has been reserved successfully. We look forward to welcoming you to Dalchini Tomintoul. A confirmation email has been sent to you with all the details.",
+          class: "status-confirmed",
+        },
+        {
+          status: "rejected",
+          icon: "❌",
+          title: "Reservation Unavailable",
+          message:
+            "We apologize, but we are unable to accommodate your reservation request for the selected date and time. Please try selecting an alternative date or contact us directly.",
+          class: "status-rejected",
+        },
+      ];
+
+      document
+        .getElementById("reservationForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Get form data
+          const formData = {
+            name: document.getElementById("name").value,
+            phone: document.getElementById("phone").value,
+            email: document.getElementById("email").value,
+            persons: document.getElementById("persons").value,
+            date: document.getElementById("date").value,
+            startTime: document.getElementById("startTime").value,
+            endTime: document.getElementById("endTime").value,
+          };
+
+          // Validate form
+          if (
+            !formData.name ||
+            !formData.phone ||
+            !formData.email ||
+            !formData.persons ||
+            !formData.date ||
+            !formData.startTime ||
+            !formData.endTime
+          ) {
+            alert("Please fill in all fields");
+            return;
+          }
+
+          // Validate phone number
+          const phoneRegex = /^[0-9]{10}$/;
+          if (!phoneRegex.test(formData.phone)) {
+            alert("Please enter a valid 10-digit phone number");
+            return;
+          }
+
+          // Validate time range
+          if (formData.startTime >= formData.endTime) {
+            alert("End time must be after start time");
+            return;
+          }
+
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(formData.email)) {
+            alert("Please enter a valid email address");
+            return;
+          }
+
+          // Simulate processing delay
+          const submitBtn = document.querySelector(".submit-btn");
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = "Sending Verification...";
+          submitBtn.disabled = true;
+
+          setTimeout(() => {
+            // Show email verification step
+            showEmailVerification(formData);
+
+            // Reset button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }, 2000);
+        });
+
+      function showEmailVerification(formData) {
+        const modal = document.getElementById("statusModal");
+        const emailVerification = document.getElementById("emailVerification");
+        const emailPreview = document.getElementById("emailPreview");
+        const statusContent = document.getElementById("statusContent");
+
+        // Hide status content, show email verification
+        statusContent.style.display = "none";
+        emailVerification.style.display = "block";
+        emailPreview.style.display = "block";
+
+        // Fill in email details
+        document.getElementById("userEmail").textContent = formData.email;
+        document.getElementById("emailCustomerName").textContent =
+          formData.name;
+        document.getElementById("emailReservationName").textContent =
+          formData.name;
+        document.getElementById("emailReservationDate").textContent = new Date(
+          formData.date
+        ).toLocaleDateString("en-GB", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        document.getElementById("emailReservationTime").textContent =
+          formData.startTime + " - " + formData.endTime;
+        document.getElementById("emailReservationGuests").textContent =
+          formData.persons;
+        document.getElementById("emailReservationPhone").textContent =
+          formData.phone;
+
+        // Store form data for later use
+        window.currentReservation = formData;
+
+        modal.style.display = "block";
+
+        // In a real application, this is where you would send the actual email
+        // sendVerificationEmail(formData);
+      }
+
+      function verifyEmail() {
+        // Hide email verification, show processing
+        const emailVerification = document.getElementById("emailVerification");
+        const emailPreview = document.getElementById("emailPreview");
+        const statusContent = document.getElementById("statusContent");
+
+        emailVerification.style.display = "none";
+        emailPreview.style.display = "none";
+        statusContent.style.display = "block";
+
+        // Show processing state
+        document.getElementById("statusIcon").textContent = "⏳";
+        document.getElementById("statusTitle").textContent =
+          "Verifying Email...";
+        document.getElementById("statusMessage").textContent =
+          "Please wait while we verify your email address.";
+
+        // Simulate email verification delay
+        setTimeout(() => {
+          // Now show the final reservation status
+          const randomStatus =
+            statusOptions[Math.floor(Math.random() * statusOptions.length)];
+          showFinalStatus(randomStatus);
+
+          // Reset form if confirmed
+          if (randomStatus.status === "confirmed") {
+            document.getElementById("reservationForm").reset();
+          }
+        }, 2000);
+      }
+
+      function showFinalStatus(statusInfo) {
+        const icon = document.getElementById("statusIcon");
+        const title = document.getElementById("statusTitle");
+        const message = document.getElementById("statusMessage");
+
+        icon.textContent = statusInfo.icon;
+        title.textContent = statusInfo.title;
+        message.textContent =
+          statusInfo.message +
+          " A confirmation email has been sent to " +
+          window.currentReservation.email;
+
+        // Apply status-specific styling
+        title.className = `status-title ${statusInfo.class}`;
+        icon.className = `status-icon ${statusInfo.class}`;
+      }
+
+      // Real email sending function (commented out - requires backend)
+      /*
+        async function sendVerificationEmail(formData) {
+            try {
+                const response = await fetch('/api/send-verification-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    console.log('Verification email sent successfully');
+                } else {
+                    console.error('Failed to send verification email');
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+            }
+        }
+        */
+
+      function showStatusModal(statusInfo) {
+        const modal = document.getElementById("statusModal");
+        const statusContent = document.getElementById("statusContent");
+        const emailVerification = document.getElementById("emailVerification");
+        const emailPreview = document.getElementById("emailPreview");
+
+        // Show status content, hide email verification
+        statusContent.style.display = "block";
+        emailVerification.style.display = "none";
+        emailPreview.style.display = "none";
+
+        const icon = document.getElementById("statusIcon");
+        const title = document.getElementById("statusTitle");
+        const message = document.getElementById("statusMessage");
+
+        icon.textContent = statusInfo.icon;
+        title.textContent = statusInfo.title;
+        message.textContent = statusInfo.message;
+
+        // Apply status-specific styling
+        title.className = `status-title ${statusInfo.class}`;
+        icon.className = `status-icon ${statusInfo.class}`;
+
+        modal.style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("statusModal").style.display = "none";
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function (event) {
+        const modal = document.getElementById("statusModal");
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+
+      // Close modal with Escape key
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeModal();
+        }
+      });
+    </script>
+  </body>
+</html>
