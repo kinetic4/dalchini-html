@@ -578,71 +578,85 @@
         },
       ];
 
-      document
-        .getElementById("reservationForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+      async function checkDateAvailability(date) {
+        try {
+          const response = await fetch(`http://localhost:8080/api/calendar/date/${date}`);
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          console.error('Error checking date availability:', error);
+          return { status: 'Available' };
+        }
+      }
 
-          // Get form data
-          const formData = {
-            name: document.getElementById("name").value,
-            phone: document.getElementById("phone").value,
-            email: document.getElementById("email").value,
-            persons: document.getElementById("persons").value,
-            date: document.getElementById("date").value,
-            startTime: document.getElementById("startTime").value,
-            endTime: document.getElementById("endTime").value,
-          };
+      document.getElementById("reservationForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-          // Validate form
-          if (
-            !formData.name ||
-            !formData.phone ||
-            !formData.email ||
-            !formData.persons ||
-            !formData.date ||
-            !formData.startTime ||
-            !formData.endTime
-          ) {
-            alert("Please fill in all fields");
-            return;
-          }
+        // Get form data
+        const formData = {
+          name: document.getElementById("name").value,
+          phone: document.getElementById("phone").value,
+          email: document.getElementById("email").value,
+          persons: document.getElementById("persons").value,
+          date: document.getElementById("date").value,
+          startTime: document.getElementById("startTime").value,
+          endTime: document.getElementById("endTime").value,
+        };
 
-          // Validate phone number
-          const phoneRegex = /^[0-9]{10}$/;
-          if (!phoneRegex.test(formData.phone)) {
-            alert("Please enter a valid 10-digit phone number");
-            return;
-          }
+        // Validate form
+        if (!formData.name || !formData.phone || !formData.email || !formData.persons || !formData.date || !formData.startTime || !formData.endTime) {
+          alert("Please fill in all fields");
+          return;
+        }
 
-          // Validate time range
-          if (formData.startTime >= formData.endTime) {
-            alert("End time must be after start time");
-            return;
-          }
+        // Check date availability
+        const availability = await checkDateAvailability(formData.date);
+        if (availability.status === 'Unavailable') {
+          showStatusModal({
+            status: "rejected",
+            icon: "❌",
+            title: "Date Unavailable",
+            message: `This date is unavailable. ${availability.note ? `Reason: ${availability.note}` : ''}`,
+            class: "status-rejected"
+          });
+          return;
+        }
 
-          // Validate email format
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(formData.email)) {
-            alert("Please enter a valid email address");
-            return;
-          }
+        // Validate phone number
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(formData.phone)) {
+          alert("Please enter a valid 10-digit phone number");
+          return;
+        }
 
-          // Simulate processing delay
-          const submitBtn = document.querySelector(".submit-btn");
-          const originalText = submitBtn.textContent;
-          submitBtn.textContent = "Sending Verification...";
-          submitBtn.disabled = true;
+        // Validate time range
+        if (formData.startTime >= formData.endTime) {
+          alert("End time must be after start time");
+          return;
+        }
 
-          setTimeout(() => {
-            // Show email verification step
-            showEmailVerification(formData);
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+          alert("Please enter a valid email address");
+          return;
+        }
 
-            // Reset button
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-          }, 2000);
-        });
+        // Simulate processing delay
+        const submitBtn = document.querySelector(".submit-btn");
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "Sending Verification...";
+        submitBtn.disabled = true;
+
+        setTimeout(() => {
+          // Show email verification step
+          showEmailVerification(formData);
+
+          // Reset button
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        }, 2000);
+      });
 
       function showEmailVerification(formData) {
         const modal = document.getElementById("statusModal");
@@ -800,6 +814,50 @@
           closeModal();
         }
       });
+
+      // Add date input change handler
+      document.getElementById("date").addEventListener("change", async function(e) {
+        const selectedDate = e.target.value;
+        const submitBtn = document.querySelector(".submit-btn");
+
+        if (!selectedDate) {
+          // If date is cleared, reset styling and enable button
+          this.style.borderColor = "rgba(255, 255, 255, 0.25)";
+          this.style.boxShadow = "none";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const availability = await checkDateAvailability(selectedDate);
+        
+        if (availability.status === 'unavailable') {
+          this.style.borderColor = "#e74c3c";
+          this.style.boxShadow = "0 0 15px rgba(231, 76, 60, 0.25)";
+          alert(`This date is unavailable. ${availability.note ? `Reason: ${availability.note}` : ''}`);
+          submitBtn.disabled = true; // Disable submit button
+        } else {
+          this.style.borderColor = "#27ae60";
+          this.style.boxShadow = "0 0 15px rgba(39, 174, 96, 0.25)";
+          submitBtn.disabled = false; // Enable submit button
+        }
+      });
+
+      // Initial check on page load if a date is pre-filled (optional)
+      // const initialDate = document.getElementById("date").value;
+      // if (initialDate) {
+      //   checkDateAvailability(initialDate).then(availability => {
+      //     const submitBtn = document.querySelector(".submit-btn");
+      //     if (availability.status === 'unavailable') {
+      //       document.getElementById("date").style.borderColor = "#e74c3c";
+      //       document.getElementById("date").style.boxShadow = "0 0 15px rgba(231, 76, 60, 0.25)";
+      //       submitBtn.disabled = true;
+      //     } else {
+      //       document.getElementById("date").style.borderColor = "#27ae60";
+      //       document.getElementById("date").style.boxShadow = "0 0 15px rgba(39, 174, 96, 0.25)";
+      //       submitBtn.disabled = false;
+      //     }
+      //   });
+      // }
     </script>
   </body>
 </html>

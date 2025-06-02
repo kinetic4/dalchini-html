@@ -21,6 +21,13 @@ export const tables = {
             title: 'Orders Datatable 1',
             transKey: 'nav.tables.orders-datatable-1',
             Icon: TableIcon
+        },
+        {
+            id: 'tables.calendar',
+            path: path(ROOT_APPS, '/calendar'),
+            type: NAV_TYPE_ITEM,
+            title: 'Calendar',
+            transKey: 'Calendar',
         }
     ]
 }

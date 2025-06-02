@@ -418,6 +418,12 @@ const protectedRoutes = {
               }),
             },
             {
+              path: "calendar",
+              lazy: async () => ({
+                Component: (await import("app/pages/tables/calendar")).default,
+              }),
+            },
+            {
               path: "orders-datatable-2",
               lazy: async () => ({
                 Component: (await import("app/pages/tables/orders-datatable-2"))
