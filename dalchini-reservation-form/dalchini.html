@@ -820,28 +820,37 @@ input[type="date"]::-webkit-datetime-edit-text {
 
     // Add a new function to check time slot availability
     function isTimeSlotAvailable(dateInfo, startTime, endTime) {
-      if (!dateInfo || dateInfo.status !== 'unavailable') return true;
-      if (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0) return true;
-      
-      // Convert times to minutes for easier comparison
-      const startMinutes = convertTimeToMinutes(startTime);
-      const endMinutes = convertTimeToMinutes(endTime);
-      
-      // Check against each unavailable time slot
-      for (const unavailableTime of dateInfo.unavailableTimes) {
-        const [unavailableStart, unavailableEnd] = unavailableTime.split('-');
-        const unavailableStartMinutes = convertTimeToMinutes(unavailableStart);
-        const unavailableEndMinutes = convertTimeToMinutes(unavailableEnd || unavailableStart);
-        
-        // Check for overlap
-        if (startMinutes < unavailableEndMinutes && endMinutes > unavailableStartMinutes) {
-          return false; // There's an overlap
-        }
-      }
-      
-      return true; // No overlap found
+  if (!dateInfo || dateInfo.status !== 'unavailable') return true;
+  if (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0) return true;
+  
+  // Convert times to minutes for easier comparison
+  const startMinutes = convertTimeToMinutes(startTime);
+  const endMinutes = convertTimeToMinutes(endTime);
+  
+  // Check against each unavailable time slot
+  for (const unavailableTime of dateInfo.unavailableTimes) {
+    // Handle both single times (e.g., "10:00") and ranges (e.g., "10:00-11:00")
+    const [unavailableStart, unavailableEnd] = unavailableTime.includes('-') 
+      ? unavailableTime.split('-') 
+      : [unavailableTime, unavailableTime];
+    
+    const unavailableStartMinutes = convertTimeToMinutes(unavailableStart);
+    const unavailableEndMinutes = unavailableEnd 
+      ? convertTimeToMinutes(unavailableEnd)
+      : unavailableStartMinutes + 60; // Default to 1 hour slot if no end time
+    
+    // Check for overlap - if any part of the selected time falls within an unavailable slot
+    if (
+      (startMinutes >= unavailableStartMinutes && startMinutes < unavailableEndMinutes) ||
+      (endMinutes > unavailableStartMinutes && endMinutes <= unavailableEndMinutes) ||
+      (startMinutes <= unavailableStartMinutes && endMinutes >= unavailableEndMinutes)
+    ) {
+      return false; // There's an overlap
     }
-
+  }
+  
+  return true; // No overlap found
+}
     // Helper function to convert HH:MM to minutes
     function convertTimeToMinutes(time) {
       const [hours, minutes] = time.split(':').map(Number);
@@ -913,39 +922,16 @@ input[type="date"]::-webkit-datetime-edit-text {
 
       // --- Client-side Validation ---
       if (!formData.name || !formData.phone || !formData.email || !formData.persons || !formData.date || !formData.startTime || !formData.endTime) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Missing Information",
-          message: "Please fill in all required fields.",
-          class: "status-rejected"
-        });
-        return;
-      }
-
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Invalid Phone Number",
-          message: "Please enter a valid 10-digit phone number.",
-          class: "status-rejected"
-        });
-        return;
-      }
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Invalid Email Address",
-          message: "Please enter a valid email address.",
-          class: "status-rejected"
-        });
-        return;
-      }
+    showStatusModal({
+      status: "rejected",
+      icon: "❌",
+      title: "Missing Information",
+      message: "Please fill in all required fields.",
+      class: "status-rejected"
+    });
+    return;
+  }
+   
 
       if (formData.startTime >= formData.endTime) {
         showStatusModal({
@@ -960,59 +946,62 @@ input[type="date"]::-webkit-datetime-edit-text {
       // --- End Client-side Validation ---
 
       // Fetch the latest availability data for the selected date
-  const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);
-
+      const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);
       // Check if the entire date is marked unavailable without specific time slots
       if (dateInfo && dateInfo.status === 'unavailable' && (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0)) {
-          showStatusModal({
-            status: "rejected",
-            icon: "❌",
-            title: "Date Completely Unavailable",
-            message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
-            class: "status-rejected"
-          });
-          return;
-        }
+    showStatusModal({
+      status: "rejected",
+      icon: "❌",
+      title: "Date Completely Unavailable",
+      message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
+      class: "status-rejected"
+    });
+    return;
+  }
 
-      // If the date has unavailable times (or is available), check the selected time slot
-      if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
-          // Get the unavailable time slots for display
-          let unavailableSlots = [];
-          if (dateInfo.unavailableTimes) {
-            unavailableSlots = dateInfo.unavailableTimes.map(slot => {
-              const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
-              return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end)}`;
-            });
-          }
-          showStatusModal({
-            status: "rejected",
-            icon: "❌",
-            title: "Selected Time Slot Unavailable",
-            message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
-            class: "status-rejected"
-          });
-          return;
-        }
-
+  // Check time slot availability
+  if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
+    // Get the unavailable time slots for display
+    let unavailableSlots = [];
+    if (dateInfo.unavailableTimes) {
+      unavailableSlots = dateInfo.unavailableTimes.map(slot => {
+        const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
+        return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end || start)}`;
+      });
+    }
+    
+    showStatusModal({
+      status: "rejected",
+      icon: "❌",
+      title: "Selected Time Slot Unavailable",
+      message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
+      class: "status-rejected"
+    });
+    return;
+  }
       // Simulate processing delay
       const submitBtn = document.querySelector(".submit-btn");
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = "Sending Verification...";
-        submitBtn.disabled = true;
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = "Sending Verification...";
+  submitBtn.disabled = true;
 
-        setTimeout(() => {
-          // Show email verification step
-          showEmailVerification(formData);
+  setTimeout(() => {
+    // Show email verification step
+    showEmailVerification(formData);
 
-          // Reset button
-          submitBtn.textContent = originalText;
-          submitBtn.disabled = false;
+    // Reset button
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }, 2000);
+});
 
-          // Reset form after successful simulation
-          document.getElementById("reservationForm").reset();
-          handleDateSelection({ target: document.getElementById("date") }); // Reset date input styling/status
-        }, 2000); // Simulate 2-second delay
-      });
+function formatTimeForDisplay(time) {
+  const [hours, minutes] = time.split(':');
+  const hourNum = parseInt(hours);
+  const ampm = hourNum >= 12 ? 'PM' : 'AM';
+  const displayHour = hourNum % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+}
 
     function showEmailVerification(formData) {
       const modal = document.getElementById("statusModal");
