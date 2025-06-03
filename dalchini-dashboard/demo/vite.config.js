@@ -12,7 +12,7 @@ export default defineConfig({
   eslint(), tailwindcss(),
   ],
   server: {
-    port: 3000,
+    port: 5173,
     strictPort: true, // This will fail if port 3000 is not available
   },
 })

@@ -27,7 +27,7 @@ export default function CalendarPage() {
       
       const datesMap = {};
       data.forEach(date => {
-        datesMap[date.date] = { status: date.status, note: date.note };
+        datesMap[date.date] = { status: date.status, note: date.note, unavailableTimes: date.unavailableTimes || [] };
       });
       
       console.log('Processed dates map:', datesMap);
@@ -100,51 +100,37 @@ export default function CalendarPage() {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = async (status, note) => {
+ // In the CalendarPage component
+const handleModalSubmit = async (status, note, unavailableTimes = []) => {
     if (!selectedDateInfo) return;
     
-    // Format date with leading zeros for month and day
     const year = selectedDateInfo.year;
     const month = String(selectedDateInfo.month + 1).padStart(2, '0');
     const day = String(selectedDateInfo.day).padStart(2, '0');
     const dateString = `${year}-${month}-${day}`;
     
     try {
-      console.log('Sending request to:', `${API_URL}/date/${dateString}`);
-      console.log('Request payload:', { status, note });
-      
       const response = await fetch(`${API_URL}/date/${dateString}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status, note }),
+      body: JSON.stringify({ status, note, unavailableTimes }),
       });
 
-      const data = await response.json();
-      console.log('Response:', data);
-
       if (response.ok) {
-        // Update local state
         setUnavailableDates(prevDates => ({
           ...prevDates,
-          [dateString]: { status, note }
+        [dateString]: { status, note, unavailableTimes }
         }));
-        
-        // Close modal
         setIsModalOpen(false);
-        
-        // Refresh calendar data to ensure sync with backend
         await fetchCalendarData();
-        
-        console.log('Successfully updated date:', data);
       } else {
-        console.error('Failed to update date status:', data.error || 'Unknown error');
-        alert('Failed to update date status. Please try again.');
+      const errorData = await response.json();
+      console.error('Failed to update date status:', errorData.error || response.statusText);
       }
     } catch (error) {
       console.error('Error updating date status:', error);
-      alert('Error updating date status. Please try again.');
     }
   };
 
@@ -384,294 +370,46 @@ export default function CalendarPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        12 AM
+                    {Array.from({ length: 24 }, (_, hour) => {
+                      const time = `${hour % 12 || 12}:00 ${hour < 12 ? 'AM' : 'PM'}`;
+                      const time24 = `${hour.toString().padStart(2, '0')}:00`;
+                      
+                      // Assuming the weekly view starts from today's week
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // Reset time for accurate date comparison
+                      const startOfWeek = new Date(today);
+                      startOfWeek.setDate(today.getDate() - today.getDay()); // Set to the previous Sunday
+                      
+                      return (
+                        <tr key={hour} className="border-t border-t-[#dde1e3]">
+                          <td className="h-[72px] px-4 py-2 w-[120px] text-[#6a7681] text-sm font-normal leading-normal">
+                            {time}
                       </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        1 AM
+                          {[0, 1, 2, 3, 4, 5, 6].map(dayIndex => {
+                            const dayDate = new Date(startOfWeek);
+                            dayDate.setDate(startOfWeek.getDate() + dayIndex);
+                            const dayString = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, '0')}-${String(dayDate.getDate()).padStart(2, '0')}`;
+                            
+                            // Check if the date is in the past
+                            const isPast = dayDate < today;
+                            
+                            // Check if the time slot is unavailable based on fetched data
+                            const isUnavailable = unavailableDates[dayString]?.unavailableTimes?.includes(time24);
+                            
+                            return (
+                              <td 
+                                key={dayIndex} 
+                                className={`h-[72px] px-4 py-2 w-[400px] text-sm font-normal leading-normal ${
+                                  isPast ? 'text-[#a0a0a0]' : (isUnavailable ? 'text-red-600' : 'text-green-600')
+                                }`}
+                              >
+                                {isPast ? 'Past' : (isUnavailable ? '❌ Unavailable' : '✅ Available')}
                       </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
+                            );
+                          })}
                     </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        2 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        3 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        4 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        5 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        6 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        7 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        8 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        9 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        10 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        11 AM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        12 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        1 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        2 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        3 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        4 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        5 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        6 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        7 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        8 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        9 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        10 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
-                    <tr className="border-t border-t-[#dde1e3]">
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-120 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal">
-                        11 PM
-                      </td>
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-240 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-360 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-480 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-600 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-720 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-840 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                      <td className="table-ecc6cef6-fa2b-4e3b-9978-5f7e4d2fadbc-column-960 h-[72px] px-4 py-2 w-[400px] text-[#6a7681] text-sm font-normal leading-normal" />
-                    </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -781,6 +519,41 @@ export default function CalendarPage() {
             </select>
           </div>
 
+{          /* In the DialogPanel component */}
+<div className="space-y-2">
+  <label className="block text-sm font-medium text-gray-700">
+    Unavailable Time Slots
+  </label>
+  <div className="grid grid-cols-4 gap-2">
+    {Array.from({ length: 24 }, (_, i) => {
+      const time = `${i.toString().padStart(2, '0')}:00`;
+      const isSelected = selectedDateInfo?.unavailableTimes?.includes(time);
+      return (
+        <button
+          key={time}
+          type="button"
+          onClick={() => {
+            setSelectedDateInfo(prev => {
+              const currentTimes = prev.unavailableTimes || [];
+              const newTimes = isSelected 
+                ? currentTimes.filter(t => t !== time)
+                : [...currentTimes, time];
+              return { ...prev, unavailableTimes: newTimes };
+            });
+          }}
+          className={`px-2 py-1 text-xs rounded-md ${
+            isSelected 
+              ? 'bg-red-100 text-red-800 border-red-300'
+              : 'bg-gray-100 text-gray-800 border-gray-300'
+          } border`}
+        >
+          {time}
+        </button>
+      );
+    })}
+  </div>
+          </div>
+
           {/* Note Field */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
@@ -805,7 +578,7 @@ export default function CalendarPage() {
             Cancel
           </button>
           <button
-            onClick={() => handleModalSubmit(selectedDateInfo?.status || 'available', selectedDateInfo?.note || '')}
+            onClick={() => handleModalSubmit(selectedDateInfo?.status || 'available', selectedDateInfo?.note || '', selectedDateInfo?.unavailableTimes || [])}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             Save Changes

@@ -15,6 +15,10 @@ const calendarSchema = new mongoose.Schema({
   note: {
     type: String,
     default: ''
+  },
+  unavailableTimes: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true,

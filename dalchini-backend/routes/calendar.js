@@ -49,36 +49,44 @@ router.get('/date/:date', async (req, res) => {
 });
 
 // Update date status (POST)
+// calendar route
 router.post('/date/:date', async (req, res) => {
   try {
     const { date } = req.params;
-    const { status, note } = req.body;
-    console.log('Updating date:', date, 'with status:', status, 'note:', note);
+    const { status, note, unavailableTimes } = req.body;
 
     // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      console.error('Invalid date format:', date);
       return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
     }
 
     // Validate status
-    if (!['available', 'unavailable'].includes(status)) {
-      console.error('Invalid status:', status);
-      return res.status(400).json({ error: 'Invalid status. Use "available" or "unavailable"' });
+    if (!['available', 'unavailable', 'busy', 'tentative'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
     }
 
-    // Log the collection name being used
-    console.log('Using collection:', Calendar.collection.name);
+    // Validate time slots if provided
+    if (unavailableTimes && Array.isArray(unavailableTimes)) {
+      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      for (const time of unavailableTimes) {
+        if (!timeRegex.test(time)) {
+          return res.status(400).json({ error: `Invalid time format: ${time}. Use HH:MM` });
+        }
+      }
+    }
+
+    const updateData = { date, status, note };
+    if (unavailableTimes) {
+      updateData.unavailableTimes = unavailableTimes;
+    }
 
     const calendarDate = await Calendar.findOneAndUpdate(
       { date },
-      { date, status, note },
+      updateData,
       { upsert: true, new: true }
     );
-    console.log('Updated date:', calendarDate);
     res.json(calendarDate);
   } catch (error) {
-    console.error('Error updating date:', error);
     res.status(500).json({ error: error.message });
   }
 });
