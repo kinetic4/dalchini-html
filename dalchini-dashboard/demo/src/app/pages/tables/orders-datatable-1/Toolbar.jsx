@@ -26,6 +26,7 @@ import { Button, Input } from "components/ui";
 import { TableConfig } from "./TableConfig";
 import { useBreakpointsContext } from "app/contexts/breakpoint/context";
 import { orderStatusOptions } from "./data";
+// import { useReactTableContext } from "app/contexts/react-table/context";
 
 // ----------------------------------------------------------------------
 
@@ -364,21 +365,25 @@ function SearchInput({ table }) {
 
 function Filters({ table }) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const hasStatus = table.getColumn("status");
+  const hasDate = table.getColumn("date");
+  // const hasGuests = table.getColumn("guests");
+
   return (
-    <>
-      {table.getColumn("order_status") && (
+    <div className="flex flex-wrap items-center gap-2">
+      {hasStatus && (
         <FacedtedFilter
           options={orderStatusOptions}
-          column={table.getColumn("order_status")}
+          column={table.getColumn("status")}
           title="Status"
           Icon={MapPinIcon}
           placeholder="Select status..."
         />
       )}
 
-      {table.getColumn("created_at") && (
+      {hasDate && (
         <DateFilter
-          column={table.getColumn("created_at")}
+          column={table.getColumn("date")}
           title="Order Date Range"
           config={{
             maxDate: new Date().fp_incr(1),
@@ -412,7 +417,7 @@ function Filters({ table }) {
           Reset Filters
         </Button>
       )}
-    </>
+    </div>
   );
 }
 

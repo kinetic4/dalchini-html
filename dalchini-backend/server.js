@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 
 // Initialize express app
 const app = express();
@@ -15,12 +16,38 @@ const corsOrigins = process.env.CORS_ORIGIN
 app.use(cors({
     origin: corsOrigins,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Attach transporter to request object
+app.use((req, res, next) => {
+  req.transporter = transporter;
+  next();
+});
+
+// SMTP Transporter setup
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// Verify transporter connection (optional but recommended)
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error('❌ SMTP transporter verification failed:', error);
+  } else {
+    console.log('✅ SMTP transporter is ready to send emails');
+  }
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -65,6 +92,19 @@ try {
     });
 }
 
+// Import and use reservation routes
+try {
+    const reservationRoutes = require('./routes/reservations');
+    app.use('/api/reservations', reservationRoutes);
+    console.log('✅ Reservation routes loaded successfully');
+} catch (error) {
+    console.error('❌ Error loading reservation routes:', error.message);
+    // Create fallback route
+    app.get('/api/reservations', (req, res) => {
+        res.status(500).json({ error: 'Reservation routes failed to load', details: error.message });
+    });
+}
+
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
     console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
@@ -72,7 +112,7 @@ app.use('*', (req, res) => {
         error: 'Route not found',
         method: req.method,
         url: req.originalUrl,
-        availableRoutes: ['/health', '/api/test', '/api/calendar']
+        availableRoutes: ['/health', '/api/test', '/api/calendar', '/api/reservations']
     });
 });
 
@@ -118,6 +158,7 @@ const startServer = async () => {
             console.log(`🏥 Health check: http://localhost:${PORT}/health`);
             console.log(`🧪 Test API: http://localhost:${PORT}/api/test`);
             console.log(`📅 Calendar API: http://localhost:${PORT}/api/calendar`);
+            console.log(`📝 Reservations API: http://localhost:${PORT}/api/reservations`);
             console.log(`🌐 CORS Origins: ${corsOrigins.join(', ')}`);
         });
     } catch (error) {

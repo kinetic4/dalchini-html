@@ -908,30 +908,28 @@ input[type="date"]::-webkit-datetime-edit-text {
 
       // Get form data
       const formData = {
-          name: document.getElementById("name").value,
-          phone: document.getElementById("phone").value,
-          email: document.getElementById("email").value,
-          persons: document.getElementById("persons").value,
-          date: document.getElementById("date").value,
-          startTime: document.getElementById("startTime").value,
-          endTime: document.getElementById("endTime").value,
-        };
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        persons: document.getElementById("persons").value,
+        date: document.getElementById("date").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+      };
 
       console.log('Form submitted with data:', formData);
 
-
       // --- Client-side Validation ---
       if (!formData.name || !formData.phone || !formData.email || !formData.persons || !formData.date || !formData.startTime || !formData.endTime) {
-    showStatusModal({
-      status: "rejected",
-      icon: "❌",
-      title: "Missing Information",
-      message: "Please fill in all required fields.",
-      class: "status-rejected"
-    });
-    return;
-  }
-   
+        showStatusModal({
+          status: "rejected",
+          icon: "❌",
+          title: "Missing Information",
+          message: "Please fill in all required fields.",
+          class: "status-rejected"
+        });
+        return;
+      }
 
       if (formData.startTime >= formData.endTime) {
         showStatusModal({
@@ -943,65 +941,89 @@ input[type="date"]::-webkit-datetime-edit-text {
         });
         return;
       }
-      // --- End Client-side Validation ---
 
       // Fetch the latest availability data for the selected date
       const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);
+      
       // Check if the entire date is marked unavailable without specific time slots
       if (dateInfo && dateInfo.status === 'unavailable' && (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0)) {
-    showStatusModal({
-      status: "rejected",
-      icon: "❌",
-      title: "Date Completely Unavailable",
-      message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
-      class: "status-rejected"
-    });
-    return;
-  }
+        showStatusModal({
+          status: "rejected",
+          icon: "❌",
+          title: "Date Completely Unavailable",
+          message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
+          class: "status-rejected"
+        });
+        return;
+      }
 
-  // Check time slot availability
-  if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
-    // Get the unavailable time slots for display
-    let unavailableSlots = [];
-    if (dateInfo.unavailableTimes) {
-      unavailableSlots = dateInfo.unavailableTimes.map(slot => {
-        const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
-        return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end || start)}`;
-      });
-    }
-    
-    showStatusModal({
-      status: "rejected",
-      icon: "❌",
-      title: "Selected Time Slot Unavailable",
-      message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
-      class: "status-rejected"
-    });
-    return;
-  }
+      // Check time slot availability
+      if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
+        let unavailableSlots = [];
+        if (dateInfo.unavailableTimes) {
+          unavailableSlots = dateInfo.unavailableTimes.map(slot => {
+            const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
+            return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end || start)}`;
+          });
+        }
+        
+        showStatusModal({
+          status: "rejected",
+          icon: "❌",
+          title: "Selected Time Slot Unavailable",
+          message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
+          class: "status-rejected"
+        });
+        return;
+      }
+
       // Simulate processing delay
       const submitBtn = document.querySelector(".submit-btn");
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Sending Verification...";
-  submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = "Sending Verification...";
+      submitBtn.disabled = true;
 
-  setTimeout(() => {
-    // Show email verification step
-    showEmailVerification(formData);
+      try {
+        // Send reservation data to the API
+        const response = await fetch('http://localhost:8080/api/reservations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
 
-    // Reset button
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-  }, 2000);
-});
+        if (!response.ok) {
+          throw new Error('Failed to create reservation');
+        }
 
-function formatTimeForDisplay(time) {
-  const [hours, minutes] = time.split(':');
-  const hourNum = parseInt(hours);
-  const ampm = hourNum >= 12 ? 'PM' : 'AM';
-  const displayHour = hourNum % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
-}
+        const data = await response.json();
+        console.log('Reservation created:', data);
+
+        // Show email verification step
+        showEmailVerification(formData);
+
+        // Store the verification token
+        window.currentReservation = {
+          ...formData,
+          verificationToken: data.verificationToken
+        };
+
+      } catch (error) {
+        console.error('Error creating reservation:', error);
+        showStatusModal({
+          status: "rejected",
+          icon: "❌",
+          title: "Error",
+          message: "Failed to create reservation. Please try again later.",
+          class: "status-rejected"
+        });
+      } finally {
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
 
     function showEmailVerification(formData) {
       const modal = document.getElementById("statusModal");
@@ -1054,8 +1076,12 @@ function formatTimeForDisplay(time) {
       }, 3000); // Simulate delay before showing "on hold" status after sending email
     }
 
-    function verifyEmail() {
-      // Simulate verification processing
+    async function verifyEmail() {
+      if (!window.currentReservation?.verificationToken) {
+        console.error('No verification token found');
+        return;
+      }
+
       const modal = document.getElementById("statusModal");
       document.getElementById("statusContent").style.display = "block";
       document.getElementById("emailVerification").style.display = "none";
@@ -1067,17 +1093,41 @@ function formatTimeForDisplay(time) {
       document.getElementById("statusIcon").className = "status-icon status-on-hold";
       document.getElementById("statusTitle").className = "status-title status-on-hold";
 
-      setTimeout(() => {
-        // Simulate a random final status after verification
-        const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];
-        showFinalStatus(randomStatus);
+      try {
+        const response = await fetch(`http://localhost:8080/api/reservations/verify/${window.currentReservation.verificationToken}`, {
+          method: 'POST'
+        });
 
-        // Reset form if simulated status is confirmed
-        if (randomStatus.status === "confirmed") {
-          document.getElementById("reservationForm").reset();
-          handleDateSelection({ target: document.getElementById("date") }); // Reset date input styling/status
+        if (!response.ok) {
+          throw new Error('Verification failed');
         }
-      }, 2000); // Simulate verification delay
+
+        const data = await response.json();
+        console.log('Reservation verified:', data);
+
+        // Show success status
+        showFinalStatus({
+          status: "confirmed",
+          icon: "✅",
+          title: "Reservation Confirmed",
+          message: "Your reservation has been confirmed! We look forward to welcoming you.",
+          class: "status-confirmed"
+        });
+
+        // Reset form
+        document.getElementById("reservationForm").reset();
+        handleDateSelection({ target: document.getElementById("date") });
+
+      } catch (error) {
+        console.error('Error verifying reservation:', error);
+        showFinalStatus({
+          status: "rejected",
+          icon: "❌",
+          title: "Verification Failed",
+          message: "Failed to verify your reservation. Please try again or contact us.",
+          class: "status-rejected"
+        });
+      }
     }
 
     function showFinalStatus(statusInfo) {

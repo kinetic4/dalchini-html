@@ -17,21 +17,27 @@ import { orderStatusOptions } from "./data";
 // ----------------------------------------------------------------------
 
 export function EditOrderModal({ isOpen, close, row, onSave }) {
-  const [selectedStatus, setSelectedStatus] = useState(row.original.order_status);
-  const [createdAt, setCreatedAt] = useState(dayjs(Number(row.original.created_at)).format('YYYY-MM-DDTHH:mm'));
-  const [startTime, setStartTime] = useState(dayjs(Number(row.original.start_time)).format('YYYY-MM-DDTHH:mm'));
-  const [endTime, setEndTime] = useState(dayjs(Number(row.original.end_time)).format('YYYY-MM-DDTHH:mm'));
-  const [numberOfGuests, setNumberOfGuests] = useState(row.original.number_of_guests || 1);
-  const [phoneNumber, setPhoneNumber] = useState(row.original.phone_number || '');
+  const [selectedStatus, setSelectedStatus] = useState(row.original.status);
+  const [name, setName] = useState(row.original.name || '');
+  const [email, setEmail] = useState(row.original.email || '');
+  const [phone, setPhone] = useState(row.original.phone || '');
+  const [date, setDate] = useState(dayjs(row.original.date).format('YYYY-MM-DD'));
+  const [startTime, setStartTime] = useState(row.original.startTime || '');
+  const [endTime, setEndTime] = useState(row.original.endTime || '');
+  const [guests, setGuests] = useState(row.original.guests || 1);
+  const [createdAt] = useState(dayjs(row.original.createdAt).format('YYYY-MM-DDTHH:mm'));
 
   const handleSave = () => {
     onSave(row.index, {
-      order_status: selectedStatus,
-      created_at: dayjs(createdAt).valueOf().toString(),
-      start_time: dayjs(startTime).valueOf().toString(),
-      end_time: dayjs(endTime).valueOf().toString(),
-      number_of_guests: Number(numberOfGuests),
-      phone_number: phoneNumber,
+      status: selectedStatus,
+      name: name,
+      email: email,
+      phone: phone,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      guests: Number(guests),
+      createdAt: dayjs(createdAt).toISOString(), // Keep as ISO string or compatible format
     });
     close();
   };
@@ -80,7 +86,7 @@ export function EditOrderModal({ isOpen, close, row, onSave }) {
                 Order ID
               </label>
               <div className="text-gray-900 dark:text-dark-100">
-                {row.original.order_id}
+                {row.original._id}
               </div>
             </div>
 
@@ -103,13 +109,49 @@ export function EditOrderModal({ isOpen, close, row, onSave }) {
 
             <div className="mb-4">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-dark-200">
-                Order Date
+                Name
               </label>
               <input
-                type="datetime-local"
+                type="text"
                 className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
-                value={createdAt}
-                onChange={e => setCreatedAt(e.target.value)}
+                value={name}
+                onChange={e => setName(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-dark-200">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-dark-200">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-dark-200">
+                Date
+              </label>
+              <input
+                type="date"
+                className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
+                value={date}
+                onChange={e => setDate(e.target.value)}
               />
             </div>
 
@@ -118,7 +160,7 @@ export function EditOrderModal({ isOpen, close, row, onSave }) {
                 Start Time
               </label>
               <input
-                type="datetime-local"
+                type="time"
                 className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
@@ -130,7 +172,7 @@ export function EditOrderModal({ isOpen, close, row, onSave }) {
                 End Time
               </label>
               <input
-                type="datetime-local"
+                type="time"
                 className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
                 value={endTime}
                 onChange={e => setEndTime(e.target.value)}
@@ -145,20 +187,8 @@ export function EditOrderModal({ isOpen, close, row, onSave }) {
                 type="number"
                 min="1"
                 className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
-                value={numberOfGuests}
-                onChange={e => setNumberOfGuests(e.target.value)}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-dark-200">
-                Phone Number
-              </label>
-              <input
-                type="text"
-                className="w-full rounded border border-gray-300 px-2 py-1 dark:bg-dark-700 dark:text-dark-100"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
+                value={guests}
+                onChange={e => setGuests(e.target.value)}
               />
             </div>
           </div>

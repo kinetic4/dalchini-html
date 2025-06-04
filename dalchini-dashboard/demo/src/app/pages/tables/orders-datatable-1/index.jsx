@@ -20,33 +20,132 @@ import { useLockScrollbar, useDidUpdate, useLocalStorage } from "hooks";
 import { fuzzyFilter } from "utils/react-table/fuzzyFilter";
 import { useSkipper } from "utils/react-table/useSkipper";
 import { Toolbar } from "./Toolbar";
-import { columns } from "./columns";
-import { ordersList } from "./data";
+import { columns } from "./columns.jsx";
 import { PaginationSection } from "components/shared/table/PaginationSection";
 import { SelectedRowsActions } from "./SelectedRowsActions";
 import { useThemeContext } from "app/contexts/theme/context";
 import { getUserAgentBrowser } from "utils/dom/getUserAgentBrowser";
 
-// ----------------------------------------------------------------------
-
+const API_URL = 'http://localhost:8080/api/reservations';
 const isSafari = getUserAgentBrowser() === "Safari";
 
 export default function OrdersDatatableV1() {
   const { cardSkin } = useThemeContext();
 
-  // Use a key for localStorage
-  const LOCAL_STORAGE_KEY = "orders-datatable-1-orders";
+  // State for reservations
+  const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Load from localStorage if available
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [...ordersList];
-  });
-
-  // Save to localStorage whenever orders change
+  // Fetch reservations on component mount
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
-  }, [orders]);
+    fetchReservations();
+  }, []);
+
+  const fetchReservations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setReservations(data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching reservations:', error);
+      setError('Failed to load reservations. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // Update local state
+      setReservations(prevReservations =>
+        prevReservations.map(reservation =>
+          reservation._id === id
+            ? { ...reservation, status: newStatus }
+            : reservation
+        )
+      );
+    } catch (error) {
+      console.error('Error updating reservation status:', error);
+      alert('Failed to update status. Please try again.');
+    }
+  };
+
+  const handleUpdateReservation = async (id, updatedFields) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedFields)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update reservation');
+      }
+
+      const updatedReservation = await response.json();
+
+      // Update local state with the response from the API
+      setReservations(prevReservations =>
+        prevReservations.map(reservation =>
+          reservation._id === id
+            ? updatedReservation
+            : reservation
+        )
+      );
+      console.log('Reservation updated successfully:', updatedReservation);
+    } catch (error) {
+      console.error('Error updating reservation:', error);
+      alert('Failed to update reservation. Please try again.');
+      // Optionally revert local state or refetch data on error
+      fetchReservations(); // Simple approach: refetch all data on error
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this reservation?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete reservation');
+      }
+
+      // Update local state
+      setReservations(prevReservations =>
+        prevReservations.filter(reservation => reservation._id !== id)
+      );
+    } catch (error) {
+      console.error('Error deleting reservation:', error);
+      alert('Failed to delete reservation. Please try again.');
+    }
+  };
 
   const [tableSettings, setTableSettings] = useState({
     enableFullScreen: false,
@@ -54,23 +153,19 @@ export default function OrdersDatatableV1() {
   });
 
   const [globalFilter, setGlobalFilter] = useState("");
-
   const [sorting, setSorting] = useState([]);
-
   const [columnVisibility, setColumnVisibility] = useLocalStorage(
     "column-visibility-orders-1",
     {},
   );
-
   const [columnPinning, setColumnPinning] = useLocalStorage(
     "column-pinning-orders-1",
     {},
   );
-
   const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
 
   const table = useReactTable({
-    data: orders,
+    data: reservations,
     columns: columns,
     state: {
       globalFilter,
@@ -82,39 +177,27 @@ export default function OrdersDatatableV1() {
     meta: {
       updateData: (rowIndex, columnIdOrObj, value) => {
         skipAutoResetPageIndex();
-        setOrders((old) =>
-          old.map((row, index) => {
-            if (index === rowIndex) {
-              if (typeof columnIdOrObj === 'object' && columnIdOrObj !== null) {
-                // Update multiple fields
-                return {
-                  ...row,
-                  ...columnIdOrObj,
-                };
-              } else {
-                // Update single field
-                return {
-                  ...row,
-                  [columnIdOrObj]: value,
-                };
-              }
-            }
-            return row;
-          })
-        );
+        const reservation = reservations[rowIndex];
+
+        if (typeof columnIdOrObj === 'string') {
+           // Handle single column updates (like the original status change)
+           if (columnIdOrObj === 'status') {
+             handleStatusChange(reservation._id, value);
+           }
+           // Add other single column updates here if needed
+
+        } else if (typeof columnIdOrObj === 'object') {
+          // Handle multiple field updates from the modal
+          handleUpdateReservation(reservation._id, columnIdOrObj);
+        }
       },
       deleteRow: (row) => {
-        // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        setOrders((old) =>
-          old.filter((oldRow) => oldRow.order_id !== row.original.order_id),
-        );
+        handleDelete(row.original._id);
       },
       deleteRows: (rows) => {
-        // Skip page index reset until after next rerender
         skipAutoResetPageIndex();
-        const rowIds = rows.map((row) => row.original.order_id);
-        setOrders((old) => old.filter((row) => !rowIds.includes(row.order_id)));
+        rows.forEach(row => handleDelete(row.original._id));
       },
       setTableSettings,
     },
@@ -131,20 +214,33 @@ export default function OrdersDatatableV1() {
     globalFilterFn: fuzzyFilter,
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-
     getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onColumnPinningChange: setColumnPinning,
-
     autoResetPageIndex,
   });
 
-  useDidUpdate(() => table.resetRowSelection(), [orders]);
-
+  useDidUpdate(() => table.resetRowSelection(), [reservations]);
   useLockScrollbar(tableSettings.enableFullScreen);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
   return (
-    <Page title="Orders Datatable v1">
+    <Page title="Reservations">
       <div className="transition-content w-full pb-5">
         <div
           className={clsx(
@@ -230,7 +326,6 @@ export default function OrdersDatatableV1() {
                               "row-selected after:pointer-events-none after:absolute after:inset-0 after:z-2 after:h-full after:w-full after:border-3 after:border-transparent after:bg-primary-500/10 ltr:after:border-l-primary-500 rtl:after:border-r-primary-500",
                           )}
                         >
-                          {/* first row is a normal row */}
                           {row.getVisibleCells().map((cell) => {
                             return (
                               <Td
