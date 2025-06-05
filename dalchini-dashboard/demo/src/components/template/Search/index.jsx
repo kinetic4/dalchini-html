@@ -29,7 +29,7 @@ import { createScopedKeydownHandler } from "utils/dom/createScopedKeydownHandler
 import { navigation } from "app/navigation";
 import { NAV_TYPE_COLLAPSE } from "constants/app.constant";
 import { Highlight } from "components/shared/Highlight";
-import { settings } from "app/navigation/settings";
+// import { settings } from "app/navigation/settings";
 
 // ----------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ const popular = [
   },
 ];
 
-const data = flattenNav([...navigation, settings]);
+const data = flattenNav([...navigation]);
 
 export function Search({ renderButton }) {
   const [isOpen, { open, close }] = useDisclosure(false);

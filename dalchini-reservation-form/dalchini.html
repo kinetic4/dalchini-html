@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/ico" href="/favicon.png"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dalchini Tomintoul - Reservation</title>
     <style>
@@ -619,7 +620,7 @@ input[type="date"]::-webkit-datetime-edit-text {
       // Function to fetch unavailable dates from backend
       async function fetchUnavailableDates() {
         try {
-          const response = await fetch('http://localhost:8080/api/calendar');
+          const response = await fetch('https://api.dalchiniscotland.com/api/calendar');
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -803,7 +804,7 @@ input[type="date"]::-webkit-datetime-edit-text {
       
       // If not in cache, fetch from server (fallback)
       try {
-        const response = await fetch(`http://localhost:8080/api/calendar/date/${date}`);
+        const response = await fetch(`https://api.dalchiniscotland.com/api/calendar/date/${date}`);
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json();
@@ -985,7 +986,7 @@ input[type="date"]::-webkit-datetime-edit-text {
 
       try {
         // Send reservation data to the API
-        const response = await fetch('http://localhost:8080/api/reservations', {
+        const response = await fetch('https://booking.dalchini.com/api/reservations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1094,7 +1095,7 @@ input[type="date"]::-webkit-datetime-edit-text {
       document.getElementById("statusTitle").className = "status-title status-on-hold";
 
       try {
-        const response = await fetch(`http://localhost:8080/api/reservations/verify/${window.currentReservation.verificationToken}`, {
+        const response = await fetch(`https://booking.dalchini.com/api/reservations/verify/${window.currentReservation.verificationToken}`, {
           method: 'POST'
         });
 

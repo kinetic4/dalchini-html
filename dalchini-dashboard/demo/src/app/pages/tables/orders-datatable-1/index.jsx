@@ -26,7 +26,7 @@ import { SelectedRowsActions } from "./SelectedRowsActions";
 import { useThemeContext } from "app/contexts/theme/context";
 import { getUserAgentBrowser } from "utils/dom/getUserAgentBrowser";
 
-const API_URL = 'http://localhost:8080/api/reservations';
+const API_URL = 'https://api.dalchiniscotland.com/api/reservations';
 const isSafari = getUserAgentBrowser() === "Safari";
 
 export default function OrdersDatatableV1() {

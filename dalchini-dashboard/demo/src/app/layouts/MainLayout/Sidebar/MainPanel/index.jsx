@@ -6,10 +6,10 @@ import clsx from "clsx";
 // Local Imports
 import Logo from "/src/assets/appLogo.png";
 import { Menu } from "./Menu";
-import { Item } from "./Menu/Item";
+// import { Item } from "./Menu/Item";
 import { Profile } from "../../Profile";
 import { useThemeContext } from "app/contexts/theme/context";
-import { settings } from "app/navigation/settings";
+// import { settings } from "app/navigation/settings";
 
 // ----------------------------------------------------------------------
 
@@ -38,14 +38,14 @@ export function MainPanel({ nav, setActiveSegment, activeSegment }) {
 
         {/* Bottom Links */}
         <div className="flex flex-col items-center space-y-3 py-2.5">
-          <Item
+          {/* <Item
             id={settings.id}
             component={Link}
             to="/settings/appearance"
             title={"Settings"}
             isActive={activeSegment === settings.path}
             Icon={settings.Icon}
-          />
+          /> */}
           <Profile />
         </div>
       </div>

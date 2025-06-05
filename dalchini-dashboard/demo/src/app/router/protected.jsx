@@ -1008,64 +1008,64 @@ const protectedRoutes = {
             },
           ],
         },
-        {
-          path: "settings",
-          lazy: async () => ({
-            Component: (await import("app/pages/settings/Layout")).default,
-          }),
-          children: [
-            {
-              index: true,
-              element: <Navigate to="/settings/general" />,
-            },
-            {
-              path: "general",
-              lazy: async () => ({
-                Component: (await import("app/pages/settings/sections/General"))
-                  .default,
-              }),
-            },
-            {
-              path: "appearance",
-              lazy: async () => ({
-                Component: (
-                  await import("app/pages/settings/sections/Appearance")
-                ).default,
-              }),
-            },
-            {
-              path: "notifications",
-              lazy: async () => ({
-                Component: (
-                  await import("app/pages/settings/sections/Notifications")
-                ).default,
-              }),
-            },
-            {
-              path: "applications",
-              lazy: async () => ({
-                Component: (
-                  await import("app/pages/settings/sections/Applications")
-                ).default,
-              }),
-            },
-            {
-              path: "sessions",
-              lazy: async () => ({
-                Component: (
-                  await import("app/pages/settings/sections/Sessions")
-                ).default,
-              }),
-            },
-            {
-              path: "billing",
-              lazy: async () => ({
-                Component: (await import("app/pages/settings/sections/Billing"))
-                  .default,
-              }),
-            },
-          ],
-        },
+        // {
+        //   path: "settings",
+        //   lazy: async () => ({
+        //     Component: (await import("app/pages/settings/Layout")).default,
+        //   }),
+        //   children: [
+        //     {
+              
+        //       element: <Navigate to="/settings/general" />,
+        //     },
+        //     {
+        //       path: "general",
+        //       lazy: async () => ({
+        //         Component: (await import("app/pages/settings/sections/General"))
+        //           .default,
+        //       }),
+        //     },
+        //     {
+        //       path: "appearance",
+        //       lazy: async () => ({
+        //         Component: (
+        //           await import("app/pages/settings/sections/Appearance")
+        //         ).default,
+        //       }),
+        //     },
+        //     {
+        //       path: "notifications",
+        //       lazy: async () => ({
+        //         Component: (
+        //           await import("app/pages/settings/sections/Notifications")
+        //         ).default,
+        //       }),
+        //     },
+        //     {
+        //       path: "applications",
+        //       lazy: async () => ({
+        //         Component: (
+        //           await import("app/pages/settings/sections/Applications")
+        //         ).default,
+        //       }),
+        //     },
+        //     {
+        //       path: "sessions",
+        //       lazy: async () => ({
+        //         Component: (
+        //           await import("app/pages/settings/sections/Sessions")
+        //         ).default,
+        //       }),
+        //     },
+        //     {
+        //       path: "billing",
+        //       lazy: async () => ({
+        //         Component: (await import("app/pages/settings/sections/Billing"))
+        //           .default,
+        //       }),
+        //     },
+        //   ],
+        // },
       ],
     },
   ],

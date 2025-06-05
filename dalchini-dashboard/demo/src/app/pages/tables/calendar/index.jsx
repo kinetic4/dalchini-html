@@ -1,7 +1,7 @@
 import { useState, Fragment, useEffect } from "react";
 import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
 
-const API_URL = 'http://localhost:8080/api/calendar';
+const API_URL = 'https://api.dalchiniscotland.com/api/calendar';
 
 export default function CalendarPage() {
   const [unavailableDates, setUnavailableDates] = useState({});

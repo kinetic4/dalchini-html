@@ -10,7 +10,7 @@ const app = express();
 // CORS origins from environment or defaults
 const corsOrigins = process.env.CORS_ORIGIN 
   ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:52600'];
+  : ['http://localhost:3000', 'http://localhost:5173','https://api.dalchiniscotland.com'];
 
 // Middleware
 app.use(cors({
