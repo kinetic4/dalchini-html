@@ -25,7 +25,7 @@ const getStatusColor = (status) => {
     case 'pending':
       return 'warning';
     case 'rejected':
-      return 'danger';
+      return 'error';
     case 'cancelled':
       return 'secondary';
     default:
@@ -107,3 +107,6 @@ export const columns = [
         cell: RowActions
     }),
 ];
+
+
+// In your columns.jsx

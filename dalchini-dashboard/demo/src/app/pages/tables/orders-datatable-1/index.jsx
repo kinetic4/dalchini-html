@@ -63,6 +63,7 @@ export default function OrdersDatatableV1() {
   };
 
   const handleStatusChange = async (id, newStatus) => {
+    console.log('handleStatusChange called with:', id, newStatus);
     try {
       // First update the status
       const response = await fetch(`${API_URL}/${id}/status`, {
@@ -189,18 +190,39 @@ export default function OrdersDatatableV1() {
       updateData: (rowIndex, columnIdOrObj, value) => {
         skipAutoResetPageIndex();
         const reservation = reservations[rowIndex];
-
+    
         if (typeof columnIdOrObj === 'string') {
-           // Handle single column updates (like the original status change)
-           if (columnIdOrObj === 'status') {
-             handleStatusChange(reservation._id, value);
-           }
-           // Add other single column updates here if needed
-
-        } else if (typeof columnIdOrObj === 'object') {
-          // Handle multiple field updates from the modal
-          handleUpdateReservation(reservation._id, columnIdOrObj);
+          // Handle single column updates
+          if (columnIdOrObj === 'status') {
+            handleStatusChange(reservation._id, value);
+            return;
           }
+        } else {
+          // Handle object updates (from edit modal)
+          const updatedFields = columnIdOrObj;
+          
+          // Check if status is being updated
+          const currentStatus = reservation.status;
+          const newStatus = updatedFields.status;
+          
+          if (newStatus && newStatus !== currentStatus) {
+            // Status is changing, use the status endpoint
+            handleStatusChange(reservation._id, newStatus);
+            
+            // If there are other fields to update, update them separately
+            const otherFields = { ...updatedFields };
+            delete otherFields.status;
+            
+            if (Object.keys(otherFields).length > 0) {
+              // Update other fields after a short delay to ensure status is updated first
+              setTimeout(() => {
+                handleUpdateReservation(reservation._id, otherFields);
+              }, 500);
+            }
+            return;
+          }
+        }
+        handleUpdateReservation(reservation._id, columnIdOrObj);
       },
       deleteRow: (row) => {
         skipAutoResetPageIndex();

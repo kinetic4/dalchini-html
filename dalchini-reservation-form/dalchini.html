@@ -841,14 +841,14 @@
 
             // Reservation statuses and messages
             const statusOptions = [
-                {
-                    status: "on-hold",
-                    icon: "⏳",
-                    title: "Reservation On Hold",
-                    message:
-                        "Thank you for your reservation request! We have received your booking and it is currently being reviewed by our team. You will receive a confirmation email within 2-4 hours.",
-                    class: "status-on-hold",
-                },
+                // {
+                //     status: "on-hold",
+                //     icon: "⏳",
+                //     title: "Reservation On Hold",
+                //     message:
+                //         "Thank you for your reservation request! We have received your booking and it is currently being reviewed by our team. You will receive a confirmation email within 2-4 hours.",
+                //     class: "status-on-hold",
+                // },
                 {
                     status: "confirmed",
                     icon: "✅",
@@ -895,16 +895,25 @@
                     return;
                 }
 
-                if (formData.startTime >= formData.endTime) {
-                    showStatusModal({
-                        status: "rejected",
-                        icon: "❌",
-                        title: "Invalid Time Range",
-                        message: "End time must be after start time.",
-                        class: "status-rejected"
-                    });
-                    return;
-                }
+                function timeToMinutes(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+
+const startMinutes = timeToMinutes(formData.startTime);
+const endMinutes = timeToMinutes(formData.endTime);
+
+// Allow overnight bookings: if end <= start, assume next day
+if (startMinutes === endMinutes) {
+    showStatusModal({
+        status: "rejected",
+        icon: "❌",
+        title: "Invalid Time Range",
+        message: "Start and end time cannot be the same.",
+        class: "status-rejected"
+    });
+    return;
+}
 
                 // Fetch the latest availability data for the selected date
                 const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);

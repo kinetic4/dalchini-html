@@ -22,6 +22,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.options('*', cors());
+
 
 // Add this middleware in your server.js
 app.use((req, res, next) => {
@@ -72,6 +74,7 @@ app.use((req, res, next) => {
     }
     next();
 });
+
 
 // Health check endpoint - BEFORE other routes
 app.get('/health', (req, res) => {
