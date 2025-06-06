@@ -698,9 +698,14 @@
                 const submitBtn = document.querySelector('.submit-btn');
                 const dateStatus = document.getElementById('dateStatus');
                 const dateInfoContainer = document.getElementById('dateInfoContainer');
+                const unavailableTimesDisplay = document.getElementById('unavailableTimesDisplay');
 
+                // Clear previous displays
                 dateInfoContainer.innerHTML = '';
                 dateStatus.textContent = '';
+                if (unavailableTimesDisplay) {
+                    unavailableTimesDisplay.remove();
+                }
 
                 if (!selectedDate) {
                     e.target.style.borderColor = "rgba(255, 255, 255, 0.25)";

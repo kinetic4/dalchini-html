@@ -74,6 +74,102 @@ const getConfirmationEmailTemplate = (name, formattedDate, startTime, endTime, p
   `;
 };
 
+const getVerificationEmailTemplate = (name, date, startTime, endTime, persons, phone, verificationLink) => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #d4af37; margin: 0; font-size: 28px;">Verify Your Email Address</h1>
+        <p style="color: #666; margin-top: 10px;">Complete your reservation at Dalchini Tomintoul</p>
+      </div>
+
+      <div style="margin: 30px 0; text-align: center;">
+        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6;">
+          Dear ${name},
+        </p>
+        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6;">
+          Thank you for your reservation request at Dalchini Tomintoul. 
+          We've successfully received your table booking request and need to verify your email address to proceed.
+        </p>
+      </div>
+
+      <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #d4af37;">
+        <h2 style="color: #2c3e50; margin-top: 0; font-size: 20px;">Your Booking Summary</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Date:</td>
+            <td style="padding: 8px 0; font-weight: bold;">${new Date(date).toLocaleDateString('en-GB', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long', 
+              day: 'numeric'
+            })}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Time:</td>
+            <td style="padding: 8px 0; font-weight: bold;">${startTime} - ${endTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Number of Guests:</td>
+            <td style="padding: 8px 0; font-weight: bold;">${persons}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Phone:</td>
+            <td style="padding: 8px 0; font-weight: bold;">${phone}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${verificationLink}" 
+           style="display: inline-block; background-color: #d4af37; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; margin: 10px 0;">
+          Verify Email Address
+        </a>
+        <p style="color: #666; font-size: 14px; margin-top: 15px;">
+          Or copy and paste this link in your browser:<br>
+          <a href="${verificationLink}" style="color: #d4af37; word-break: break-all;">${verificationLink}</a>
+        </p>
+      </div>
+
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+        <h3 style="color: #2c3e50; margin-top: 0;">What happens next?</h3>
+        <ul style="color: #666; padding-left: 20px;">
+          <li>Click the verification button above to confirm your email address</li>
+          <li>Your reservation details will be forwarded to our restaurant team</li>
+          <li>Once reviewed and confirmed, you'll receive a confirmation email</li>
+          <li>We'll contact you if we need any additional information</li>
+        </ul>
+      </div>
+
+      <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="margin: 0; color: #856404; font-size: 14px;">
+          <strong>Important:</strong> This verification link will expire in 24 hours. 
+          If you don't verify your email within this time, please submit a new reservation request.
+        </p>
+      </div>
+
+      <div style="margin: 30px 0; text-align: center;">
+        <p style="color: #2c3e50; font-size: 16px; line-height: 1.6;">
+          We're excited to host you and look forward to offering a delightful dining experience.
+        </p>
+        <p style="color: #666; font-size: 14px;">
+          If you have any questions or need to make changes to your request, feel free to contact us.
+        </p>
+      </div>
+
+      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+        <p style="margin: 0; color: #666;">Thank you once again for your interest. We'll keep you updated!</p>
+        <p style="margin: 10px 0 0 0; font-weight: bold;">Warm regards</p>
+        <p style="margin: 5px 0; font-weight: bold;">Dalchini Tomintoul Team</p>
+        <p style="margin: 5px 0; color: #666;">
+          Phone: +44 1807 580 777<br>
+          Email: reservations@dalchinitomintoul.com<br>
+          Website: <a href="https://dalchini.devanddeploy.cloud/" style="color: #d4af37;">https://dalchini.devanddeploy.cloud/</a>
+        </p>
+      </div>
+    </div>
+  `;
+};
+
 // =======================
 // SPECIFIC ROUTES FIRST (BEFORE PARAMETERIZED ROUTES)
 // =======================
@@ -195,21 +291,25 @@ router.post('/test-email', async (req, res) => {
 });
 
 // Email verification route - SPECIFIC ROUTE
-router.get('/verify/:token', async (req, res) => {
+router.post('/verify/:token', async (req, res) => {
   try {
+      console.log('Verifying token:', req.params.token);
       const reservation = await Reservation.findOne({ verificationToken: req.params.token });
 
       if (!reservation) {
+          console.log('No reservation found for token:', req.params.token);
           return res.status(404).json({ error: 'Invalid verification token' });
       }
 
       if (reservation.isVerified) {
+          console.log('Reservation already verified:', reservation._id);
           return res.status(400).json({ error: 'Reservation already verified' });
       }
 
       reservation.isVerified = true;
       reservation.verificationToken = null;
       await reservation.save();
+      console.log('Reservation verified successfully:', reservation._id);
 
       // Send a simple HTML response for better user experience
       res.send(`
@@ -259,80 +359,67 @@ router.get('/date-range/:startDate/:endDate', async (req, res) => {
 
 // Create a new reservation
 router.post('/', async (req, res) => {
-    try {
-        const {
-            name,
-            phone,
-            email,
-            persons,
-            date,
-            startTime,
-            endTime
-        } = req.body;
+  try {
+      const {
+          name,
+          phone,
+          email,
+          persons,
+          date,
+          startTime,
+          endTime
+      } = req.body;
 
-        // Generate verification token
-        const verificationToken = crypto.randomBytes(32).toString('hex');
+      // Generate verification token
+      const verificationToken = crypto.randomBytes(32).toString('hex');
 
-        const reservation = new Reservation({
-            name,
-            phone,
-            email,
-            persons,
-            date,
-            startTime,
-            endTime,
-            verificationToken,
-            status: 'pending'
-        });
+      const reservation = new Reservation({
+          name,
+          phone,
+          email,
+          persons,
+          date,
+          startTime,
+          endTime,
+          verificationToken,
+          status: 'pending'
+      });
 
-        await reservation.save();
-        console.log('New reservation created:', reservation);
+      await reservation.save();
+      console.log('New reservation created:', reservation);
 
-        // Send verification email
-        try {
-            const verificationLink = `${process.env.BACKEND_URL}/api/reservations/verify/${verificationToken}`;
+      // Send verification email with enhanced template
+      try {
+          const verificationLink = `${process.env.BACKEND_URL}/api/reservations/verify/${verificationToken}`;
 
-            await req.transporter.sendMail({
-                from: process.env.SMTP_FROM_EMAIL,
-                to: email,
-                subject: 'Verify your Dalchini Tomintoul Reservation Email',
-                html: `
-          <p>Dear ${name},</p>
-          <p>Thank you for your reservation request at Dalchini Tomintoul.</p>
-          <p>We've successfully received your table booking request. Your reservation details have been forwarded to the restaurant team. Once your request is reviewed and confirmed, you will receive a confirmation email at the same email address you provided: </p>
-          <p> Booking Summary::</p>
-          <ul>
-            <li>Name: ${name}</li>
-            <li>Date: ${date}</li>
-            <li>Date & Time: ${startTime} - ${endTime}</li>
-            <li>Number of Guests: ${persons}</li>
-            <li>Phone: ${phone}</li>
-            <li>Special Requests (if any)</li>
-          </ul>
-          <p>We're excited to host you and look forward to offering a delightful dining experience.</p>
-          <p>If you have any questions or need to make changes to your request, feel free to contact us at [restaurant email or phone number].</p>
-            <p>Thank you once again for your interest. We'll keep you updated!</p>
-               <p>Warm regards</p>
-               <ul>
-                <p>Dalchini Tomintoul Team</p>
-                <p>https://dalchini.devanddeploy.cloud/</p>
-               </ul>
-        `,
-            });
-            console.log('Verification email sent to:', email);
-        } catch (emailError) {
-            console.error('Error sending verification email:', emailError);
-        }
+          await req.transporter.sendMail({
+              from: process.env.SMTP_FROM_EMAIL,
+              to: email,
+              subject: 'Verify Your Email - Dalchini Tomintoul Reservation',
+              html: getVerificationEmailTemplate(
+                  name, 
+                  date, 
+                  startTime, 
+                  endTime, 
+                  persons, 
+                  phone, 
+                  verificationLink
+              )
+          });
+          console.log('Verification email sent to:', email);
+      } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+      }
 
-        res.status(201).json({
-            message: 'Reservation created successfully',
-            reservation,
-            verificationToken
-        });
-    } catch (error) {
-        console.error('Error creating reservation:', error);
-        res.status(400).json({ error: error.message });
-    }
+      res.status(201).json({
+          message: 'Reservation created successfully',
+          reservation,
+          verificationToken
+      });
+  } catch (error) {
+      console.error('Error creating reservation:', error);
+      res.status(400).json({ error: error.message });
+  }
 });
 
 // Get all reservations
