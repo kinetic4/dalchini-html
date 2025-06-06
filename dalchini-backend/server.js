@@ -8,9 +8,9 @@ const nodemailer = require('nodemailer');
 const app = express();
 
 // CORS origins from environment or defaults
-const corsOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:3000', 'http://localhost:5173','https://api.dalchiniscotland.com'];
+const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:3000', 'http://localhost:5173', 'https://api.dalchiniscotland.com', 'https://booking.dalchiniscotland.com', 'https://admin.dalchiniscotland.com'];
 
 // Middleware
 app.use(cors({
@@ -25,28 +25,28 @@ app.use(express.urlencoded({ extended: true }));
 
 // Attach transporter to request object
 app.use((req, res, next) => {
-  req.transporter = transporter;
-  next();
+    req.transporter = transporter;
+    next();
 });
 
 // SMTP Transporter setup
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
 });
 
 // Verify transporter connection (optional but recommended)
 transporter.verify(function (error, success) {
-  if (error) {
-    console.error('❌ SMTP transporter verification failed:', error);
-  } else {
-    console.log('✅ SMTP transporter is ready to send emails');
-  }
+    if (error) {
+        console.error('❌ SMTP transporter verification failed:', error);
+    } else {
+        console.log('✅ SMTP transporter is ready to send emails');
+    }
 });
 
 // Request logging middleware
@@ -62,8 +62,8 @@ app.use((req, res, next) => {
 
 // Health check endpoint - BEFORE other routes
 app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'ok', 
+    res.status(200).json({
+        status: 'ok',
         timestamp: new Date().toISOString(),
         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         environment: process.env.NODE_ENV || 'development'
@@ -72,8 +72,8 @@ app.get('/health', (req, res) => {
 
 // Test route
 app.get('/api/test', (req, res) => {
-    res.json({ 
-        message: 'API is working', 
+    res.json({
+        message: 'API is working',
         timestamp: new Date().toISOString(),
         corsOrigins: corsOrigins
     });
@@ -108,7 +108,7 @@ try {
 // 404 handler for undefined routes
 app.use('*', (req, res) => {
     console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
-    res.status(404).json({ 
+    res.status(404).json({
         error: 'Route not found',
         method: req.method,
         url: req.originalUrl,
@@ -121,8 +121,8 @@ app.use((err, req, res, next) => {
     console.error('Global error handler:', err);
     res.status(500).json({
         status: 'error',
-        message: process.env.NODE_ENV === 'production' 
-            ? 'Internal server error' 
+        message: process.env.NODE_ENV === 'production'
+            ? 'Internal server error'
             : err.message
     });
 });
@@ -134,9 +134,9 @@ const connectDB = async () => {
         if (!mongoUri) {
             throw new Error('MONGODB_URI not found in environment variables');
         }
-        
+
         console.log('🔄 Connecting to MongoDB...');
-        
+
         const conn = await mongoose.connect(mongoUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true

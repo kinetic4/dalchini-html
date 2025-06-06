@@ -1,1244 +1,1208 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/ico" href="/favicon.png"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dalchini Tomintoul - Reservation</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Georgia", serif;
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-          url("https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg");
-        background-size: cover;
-        background-position: center;
-        min-height: 100vh;
-        color: white;
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 50px 20px;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 60px;
-        background-image: "https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg";
-      }
-
-      .header h1 {
-        font-size: 3.5rem;
-        font-weight: 300;
-        letter-spacing: 3px;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-      }
-
-      .header h2 {
-        font-size: 1.8rem;
-        font-weight: 400;
-        margin-bottom: 30px;
-        color: #e8e8e8;
-      }
-
-      .header p {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        max-width: 800px;
-        margin: 0 auto;
-        color: #d0d0d0;
-        font-style: italic;
-      }
-
-      .form-container {
-        background: rgba(7, 27, 13, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        padding: 50px 40px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        max-width: 900px;
-        margin: 0 auto;
-      }
-
-      .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 30px 25px;
-        margin-bottom: 50px;
-      }
-
-      .form-group {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .form-group.full-width {
-        grid-column: 1 / -1;
-      }
-
-      .form-group.two-col {
-        grid-column: span 2;
-      }
-
-      .form-label {
-        font-size: 1.1rem;
-        margin-bottom: 12px;
-        color: #f5f5f5;
-        font-weight: 400;
-        letter-spacing: 0.5px;
-      }
-
-      .form-input {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1.5px solid rgba(255, 255, 255, 0.25);
-        border-radius: 10px;
-        padding: 16px 18px;
-        font-size: 1rem;
-        color: white;
-        transition: all 0.3s ease;
-        font-family: inherit;
-        height: 50px;
-      }
-
-      .form-input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-        font-style: italic;
-      }
-
-      .form-input:focus {
-        outline: none;
-        border-color: #d4af37;
-        background: rgba(255, 255, 255, 0.12);
-        box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
-      }
-
-      .submit-btn {
-        background: linear-gradient(45deg, #d4af37, #f4e8a6);
-        color: #2c3e50;
-        border: none;
-        padding: 18px 50px;
-        font-size: 1.2rem;
-        font-weight: 600;
-        letter-spacing: 1.5px;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
-        margin: 0 auto;
-        display: block;
-        min-width: 200px;
-      }
-
-      .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.45);
-        background: linear-gradient(45deg, #f4e8a6, #d4af37);
-      }
-
-      .submit-btn:active {
-        transform: translateY(0px);
-      }
-
-      /* Status Modal */
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(5px);
-        overflow-y: auto;
-      }
-
-      .modal-content {
-        background: linear-gradient(
-          135deg,
-          rgba(20, 20, 20, 0.95),
-          rgba(40, 40, 40, 0.95)
-        );
-        margin: 5% auto;
-        padding: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 20px;
-        width: 90%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
-        text-align: center;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-        animation: modalSlideIn 0.3s ease-out;
-        position: relative;
-      }
-
-      @keyframes modalSlideIn {
-        from {
-          opacity: 0;
-          transform: translateY(-50px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .status-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-      }
-
-      .status-title {
-        font-size: 2rem;
-        margin-bottom: 15px;
-        font-weight: 300;
-      }
-
-      .status-message {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 30px;
-        color: #d0d0d0;
-      }
-
-      .status-on-hold {
-        color: #f39c12;
-      }
-
-      .status-confirmed {
-        color: #27ae60;
-      }
-
-      .status-rejected {
-        color: #e74c3c;
-      }
-
-      .close-btn {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        padding: 12px 30px;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .close-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
-      }
-
-      .email-verification {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px 0;
-        text-align: center;
-        animation: emailSent 0.5s ease-out;
-      }
-
-      @keyframes emailSent {
-        from {
-          opacity: 0;
-          transform: scale(0.9);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      .email-preview {
-        background: white;
-        color: #333;
-        padding: 30px;
-        border-radius: 10px;
-        margin: 20px 0;
-        border-left: 5px solid #d4af37;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        text-align: left;
-        font-family: Arial, sans-serif;
-      }
-
-      .email-header {
-        border-bottom: 2px solid #f0f0f0;
-        padding-bottom: 15px;
-        margin-bottom: 20px;
-      }
-
-      .email-subject {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 10px;
-      }
-
-      .email-from {
-        color: #7f8c8d;
-        font-size: 0.9rem;
-      }
-
-      .email-body {
-        line-height: 1.6;
-        color: #2c3e50;
-      }
-
-      .email-button {
-        background: #d4af37;
-        color: white;
-        padding: 12px 25px;
-        border: none;
-        border-radius: 5px;
-        font-weight: bold;
-        margin: 15px 0;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-      }
-
-      .reservation-details {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 15px 0;
-        border-left: 3px solid #d4af37;
-      }
-
-      @media (max-width: 768px) {
-        .form-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: 25px 20px;
-        }
-
-        .form-group.two-col {
-          grid-column: span 2;
-        }
-
-        .header h1 {
-          font-size: 2.5rem;
-        }
-
-        .form-container {
-          padding: 35px 25px;
-          max-width: 95%;
-        }
-
-        .modal-content {
-          margin: 2% auto;
-          width: 95%;
-          max-height: 95vh;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .form-grid {
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-
-        .form-group.two-col {
-          grid-column: span 1;
-        }
-      }
-
-      /* New styles for date picker enhancements */
-.date-picker-container {
-  position: relative;
-}
-
-.unavailable-date {
-  position: relative;
-  background-color: rgba(231, 76, 60, 0.2) !important;
-  color: #e74c3c !important;
-  text-decoration: line-through;
-  pointer-events: none;
-}
-
-.date-info-icon {
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  color: #e74c3c;
-  font-size: 12px;
-  cursor: help;
-  z-index: 1;
-  pointer-events: auto;
-}
-
-.date-info-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 10;
-}
-
-.date-info-icon:hover .date-info-tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Custom date picker styling */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-}
-
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-  color: white;
-}
-
-input[type="date"]::-webkit-datetime-edit-text {
-  color: white;
-  padding: 0 0.3em;
-}
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <h1>Reservation</h1>
-        <h2>Booking Table For Family Member</h2>
-        <p>
-          From a relaxed dinner with friends to a cosy night in, Dalchini
-          Tomintoul is here to serve. Enjoy our delicious dishes in the warm and
-          welcoming ambience of our dining area, or take your favourites home
-          with our efficient takeaway service
-        </p>
-      </div>
-
-      <form id="reservationForm" class="form-container">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Name</label>
-            <input
-              type="text"
-              class="form-input"
-              placeholder="Your Name"
-              id="name"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Phone Number</label>
-            <input
-              type="tel"
-              class="form-input"
-              placeholder="Telephone"
-              id="phone"
-              maxlength="10"
-              pattern="[0-9]{10}"
-              title="Please enter exactly 10 digits"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Email Address</label>
-            <input
-              type="email"
-              class="form-input"
-              placeholder="your.email@example.com"
-              id="email"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Guests</label>
-            <input
-              type="number"
-              class="form-input"
-              placeholder="Number of Guests"
-              id="persons"
-              min="1"
-              max="20"
-              required
-            />
-          </div>
-
-          <div class="form-group date-picker-container">
-            <label class="form-label">Date</label>
-            <input 
-              type="date" 
-              class="form-input" 
-              id="date" 
-              required 
-              onfocus="this.showPicker(); highlightUnavailableDates()"
-            />
-            <div id="dateStatus" style="margin-top: 8px; font-size: 0.9rem;"></div>
-            <div id="dateInfoContainer" style="display: none;"></div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Start Time</label>
-            <input type="time" class="form-input" id="startTime" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">End Time</label>
-            <input type="time" class="form-input" id="endTime" required />
-          </div>
-        </div>
-
-        <button type="submit" class="submit-btn">Book A Table</button>
-      </form>
-    </div>
-
-    <!-- Status Modal -->
-    <div id="statusModal" class="modal">
-      <div class="modal-content">
-        <div
-          id="emailVerification"
-          class="email-verification"
-          style="display: none"
-        >
-          <h3>📧 Email Verification Sent!</h3>
-          <p>
-            We've sent a verification email to <strong id="userEmail"></strong>
-          </p>
-          <p>
-            Please check your inbox and verify your email to complete the
-            reservation process.
-          </p>
-        </div>
-
-        <div id="emailPreview" class="email-preview" style="display: none">
-          <div class="email-header">
-            <div class="email-subject">
-              Dalchini Tomintoul - Email Verification Required
-            </div>
-            <div class="email-from">
-              From: reservations@dalchinitomintoul.com
-            </div>
-          </div>
-          <div class="email-body">
-            <p>Dear <span id="emailCustomerName"></span>,</p>
-            <p>
-              Thank you for choosing Dalchini Tomintoul! To complete your
-              reservation, please verify your email address by clicking the
-              button below:
-            </p>
-
-            <button class="email-button" onclick="verifyEmail()">
-              Verify Email Address
-            </button>
-
-            <div class="reservation-details">
-              <strong>Your Reservation Details:</strong><br />
-              <strong>Name:</strong> <span id="emailReservationName"></span
-              ><br />
-              <strong>Date:</strong> <span id="emailReservationDate"></span
-              ><br />
-              <strong>Time:</strong> <span id="emailReservationTime"></span
-              ><br />
-              <strong>Guests:</strong> <span id="emailReservationGuests"></span
-              ><br />
-              <strong>Phone:</strong> <span id="emailReservationPhone"></span>
+
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/ico" href="/favicon.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dalchini Tomintoul - Reservation</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Georgia", serif;
+                background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                    url("https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg");
+                background-size: cover;
+                background-position: center;
+                min-height: 100vh;
+                color: white;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 50px 20px;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 60px;
+                background-image: "https://dalchini.devanddeploy.cloud/wp-content/uploads/2025/04/couples-relaxing-over-lunch-in-a-restaurant-elevated-view.jpg";
+            }
+
+            .header h1 {
+                font-size: 3.5rem;
+                font-weight: 300;
+                letter-spacing: 3px;
+                margin-bottom: 20px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+
+            .header h2 {
+                font-size: 1.8rem;
+                font-weight: 400;
+                margin-bottom: 30px;
+                color: #e8e8e8;
+            }
+
+            .header p {
+                font-size: 1.1rem;
+                line-height: 1.8;
+                max-width: 800px;
+                margin: 0 auto;
+                color: #d0d0d0;
+                font-style: italic;
+            }
+
+            .form-container {
+                background: rgba(7, 27, 13, 0.95);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 20px;
+                padding: 50px 40px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 30px 25px;
+                margin-bottom: 50px;
+            }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .form-group.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .form-group.two-col {
+                grid-column: span 2;
+            }
+
+            .form-label {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+                color: #f5f5f5;
+                font-weight: 400;
+                letter-spacing: 0.5px;
+            }
+
+            .form-input {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1.5px solid rgba(255, 255, 255, 0.25);
+                border-radius: 10px;
+                padding: 16px 18px;
+                font-size: 1rem;
+                color: white;
+                transition: all 0.3s ease;
+                font-family: inherit;
+                height: 50px;
+            }
+
+            .form-input::placeholder {
+                color: rgba(255, 255, 255, 0.6);
+                font-style: italic;
+            }
+
+            .form-input:focus {
+                outline: none;
+                border-color: #d4af37;
+                background: rgba(255, 255, 255, 0.12);
+                box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+            }
+
+            .submit-btn {
+                background: linear-gradient(45deg, #d4af37, #f4e8a6);
+                color: #2c3e50;
+                border: none;
+                padding: 18px 50px;
+                font-size: 1.2rem;
+                font-weight: 600;
+                letter-spacing: 1.5px;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-transform: uppercase;
+                box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+                margin: 0 auto;
+                display: block;
+                min-width: 200px;
+            }
+
+            .submit-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 35px rgba(212, 175, 55, 0.45);
+                background: linear-gradient(45deg, #f4e8a6, #d4af37);
+            }
+
+            .submit-btn:active {
+                transform: translateY(0px);
+            }
+
+            /* Status Modal */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(5px);
+                overflow-y: auto;
+            }
+
+            .modal-content {
+                background: linear-gradient(135deg,
+                        rgba(20, 20, 20, 0.95),
+                        rgba(40, 40, 40, 0.95));
+                margin: 5% auto;
+                padding: 40px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                width: 90%;
+                max-width: 600px;
+                max-height: 90vh;
+                overflow-y: auto;
+                text-align: center;
+                box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+                animation: modalSlideIn 0.3s ease-out;
+                position: relative;
+            }
+
+            @keyframes modalSlideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-50px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .status-icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+            }
+
+            .status-title {
+                font-size: 2rem;
+                margin-bottom: 15px;
+                font-weight: 300;
+            }
+
+            .status-message {
+                font-size: 1.1rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+                color: #d0d0d0;
+            }
+
+            .status-on-hold {
+                color: #f39c12;
+            }
+
+            .status-confirmed {
+                color: #27ae60;
+            }
+
+            .status-rejected {
+                color: #e74c3c;
+            }
+
+            .close-btn {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                padding: 12px 30px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+            }
+
+            .close-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            .email-verification {
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+                text-align: center;
+                animation: emailSent 0.5s ease-out;
+            }
+
+            @keyframes emailSent {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            .email-preview {
+                background: white;
+                color: #333;
+                padding: 30px;
+                border-radius: 10px;
+                margin: 20px 0;
+                border-left: 5px solid #d4af37;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                text-align: left;
+                font-family: Arial, sans-serif;
+            }
+
+            .email-header {
+                border-bottom: 2px solid #f0f0f0;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            .email-subject {
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: #2c3e50;
+                margin-bottom: 10px;
+            }
+
+            .email-from {
+                color: #7f8c8d;
+                font-size: 0.9rem;
+            }
+
+            .email-body {
+                line-height: 1.6;
+                color: #2c3e50;
+            }
+
+            .email-button {
+                background: #d4af37;
+                color: white;
+                padding: 12px 25px;
+                border: none;
+                border-radius: 5px;
+                font-weight: bold;
+                margin: 15px 0;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+            }
+
+            .reservation-details {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 15px 0;
+                border-left: 3px solid #d4af37;
+            }
+
+            @media (max-width: 768px) {
+                .form-grid {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 25px 20px;
+                }
+
+                .form-group.two-col {
+                    grid-column: span 2;
+                }
+
+                .header h1 {
+                    font-size: 2.5rem;
+                }
+
+                .form-container {
+                    padding: 35px 25px;
+                    max-width: 95%;
+                }
+
+                .modal-content {
+                    margin: 2% auto;
+                    width: 95%;
+                    max-height: 95vh;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                    gap: 20px;
+                }
+
+                .form-group.two-col {
+                    grid-column: span 1;
+                }
+            }
+
+            /* New styles for date picker enhancements */
+            .date-picker-container {
+                position: relative;
+            }
+
+            .unavailable-date {
+                position: relative;
+                background-color: rgba(231, 76, 60, 0.2) !important;
+                color: #e74c3c !important;
+                text-decoration: line-through;
+                pointer-events: none;
+            }
+
+            .date-info-icon {
+                position: absolute;
+                right: 5px;
+                top: 5px;
+                color: #e74c3c;
+                font-size: 12px;
+                cursor: help;
+                z-index: 1;
+                pointer-events: auto;
+            }
+
+            .date-info-tooltip {
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                visibility: hidden;
+                opacity: 0;
+                transition: opacity 0.2s;
+                z-index: 10;
+            }
+
+            .date-info-icon:hover .date-info-tooltip {
+                visibility: visible;
+                opacity: 1;
+            }
+
+            /* Custom date picker styling */
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(1);
+                cursor: pointer;
+            }
+
+            input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+                color: white;
+            }
+
+            input[type="date"]::-webkit-datetime-edit-text {
+                color: white;
+                padding: 0 0.3em;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Reservation</h1>
+                <h2>Booking Table For Family Member</h2>
+                <p>
+                    From a relaxed dinner with friends to a cosy night in, Dalchini
+                    Tomintoul is here to serve. Enjoy our delicious dishes in the warm and
+                    welcoming ambience of our dining area, or take your favourites home
+                    with our efficient takeaway service
+                </p>
             </div>
 
-            <p>
-              Once verified, you'll receive a final confirmation with your
-              reservation status.
-            </p>
-            <p>
-              If you didn't make this reservation, please ignore this email.
-            </p>
+            <form id="reservationForm" class="form-container">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-input" placeholder="Your Name" id="name" required />
+                    </div>
 
-            <p>
-              Best regards,<br />
-              <strong>Dalchini Tomintoul Team</strong><br />
-              Phone: +44 1807 580 777<br />
-              Email: reservations@dalchinitomintoul.com
-            </p>
-          </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-input" placeholder="Telephone" id="phone" maxlength="10"
+                            pattern="[0-9]{10}" title="Please enter exactly 10 digits" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" placeholder="your.email@example.com" id="email"
+                            required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Guests</label>
+                        <input type="number" class="form-input" placeholder="Number of Guests" id="persons" min="1"
+                            max="20" required />
+                    </div>
+
+                    <div class="form-group date-picker-container">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="date" required
+                            onfocus="this.showPicker(); highlightUnavailableDates()" />
+                        <div id="dateStatus" style="margin-top: 8px; font-size: 0.9rem;"></div>
+                        <div id="dateInfoContainer" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Start Time</label>
+                        <input type="time" class="form-input" id="startTime" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">End Time</label>
+                        <input type="time" class="form-input" id="endTime" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Book A Table</button>
+            </form>
         </div>
 
-        <div id="statusContent">
-          <div id="statusIcon" class="status-icon"></div>
-          <h2 id="statusTitle" class="status-title"></h2>
-          <p id="statusMessage" class="status-message"></p>
+        <!-- Status Modal -->
+        <div id="statusModal" class="modal">
+            <div class="modal-content">
+                <div id="emailVerification" class="email-verification" style="display: none">
+                    <h3>📧 Email Verification Sent!</h3>
+                    <p>
+                        We've sent a verification email to <strong id="userEmail"></strong>
+                    </p>
+                    <p>
+                        Please check your inbox and verify your email to complete the
+                        reservation process.
+                    </p>
+                </div>
+
+                <div id="emailPreview" class="email-preview" style="display: none">
+                    <div class="email-header">
+                        <div class="email-subject">
+                            Dalchini Tomintoul - Email Verification Required
+                        </div>
+                        <div class="email-from">
+                            From: reservations@dalchinitomintoul.com
+                        </div>
+                    </div>
+                    <div class="email-body">
+                        <p>Dear <span id="emailCustomerName"></span>,</p>
+                        <p>
+                            Thank you for choosing Dalchini Tomintoul! To complete your
+                            reservation, please verify your email address by clicking the
+                            button below:
+                        </p>
+
+                        <button class="email-button" onclick="verifyEmail()">
+                            Verify Email Address
+                        </button>
+
+                        <div class="reservation-details">
+                            <strong>Your Reservation Details:</strong><br />
+                            <strong>Name:</strong> <span id="emailReservationName"></span><br />
+                            <strong>Date:</strong> <span id="emailReservationDate"></span><br />
+                            <strong>Time:</strong> <span id="emailReservationTime"></span><br />
+                            <strong>Guests:</strong> <span id="emailReservationGuests"></span><br />
+                            <strong>Phone:</strong> <span id="emailReservationPhone"></span>
+                        </div>
+
+                        <p>
+                            Once verified, you'll receive a final confirmation with your
+                            reservation status.
+                        </p>
+                        <p>
+                            If you didn't make this reservation, please ignore this email.
+                        </p>
+
+                        <p>
+                            Best regards,<br />
+                            <strong>Dalchini Tomintoul Team</strong><br />
+                            Phone: +44 1807 580 777<br />
+                            Email: reservations@dalchinitomintoul.com
+                        </p>
+                    </div>
+                </div>
+
+                <div id="statusContent">
+                    <div id="statusIcon" class="status-icon"></div>
+                    <h2 id="statusTitle" class="status-title"></h2>
+                    <p id="statusMessage" class="status-message"></p>
+                </div>
+
+                <button class="close-btn" onclick="closeModal()">Close</button>
+            </div>
         </div>
 
-        <button class="close-btn" onclick="closeModal()">Close</button>
-      </div>
-    </div>
+        <script>
+            // Real-time phone number validation
+            document.getElementById("phone").addEventListener("input", function (e) {
+                // Remove any non-digit characters
+                this.value = this.value.replace(/[^0-9]/g, "");
 
-    <script>
-      // Real-time phone number validation
-      document.getElementById("phone").addEventListener("input", function (e) {
-        // Remove any non-digit characters
-        this.value = this.value.replace(/[^0-9]/g, "");
+                // Limit to 10 digits
+                if (this.value.length > 10) {
+                    this.value = this.value.slice(0, 10);
+                }
+            });
 
-        // Limit to 10 digits
-        if (this.value.length > 10) {
-          this.value = this.value.slice(0, 10);
-        }
-      });
+            // Real-time email validation visual feedback
+            document.getElementById("email").addEventListener("blur", function (e) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (this.value && !emailRegex.test(this.value)) {
+                    this.style.borderColor = "#e74c3c";
+                    this.style.boxShadow = "0 0 15px rgba(231, 76, 60, 0.25)";
+                } else if (this.value) {
+                    this.style.borderColor = "#27ae60";
+                    this.style.boxShadow = "0 0 15px rgba(39, 174, 96, 0.25)";
+                } else {
+                    this.style.borderColor = "rgba(255, 255, 255, 0.25)";
+                    this.style.boxShadow = "none";
+                }
+            });
 
-      // Real-time email validation visual feedback
-      document.getElementById("email").addEventListener("blur", function (e) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (this.value && !emailRegex.test(this.value)) {
-          this.style.borderColor = "#e74c3c";
-          this.style.boxShadow = "0 0 15px rgba(231, 76, 60, 0.25)";
-        } else if (this.value) {
-          this.style.borderColor = "#27ae60";
-          this.style.boxShadow = "0 0 15px rgba(39, 174, 96, 0.25)";
-        } else {
-          this.style.borderColor = "rgba(255, 255, 255, 0.25)";
-          this.style.boxShadow = "none";
-        }
-      });
+            // Global variable to store unavailable dates
+            let unavailableDates = {};
 
-      // Global variable to store unavailable dates
-      let unavailableDates = {};
+            // Function to fetch unavailable dates from backend
+            async function fetchUnavailableDates() {
+                try {
+                    const response = await fetch('https://api.dalchiniscotland.com/api/calendar');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
 
-      // Function to fetch unavailable dates from backend
-      async function fetchUnavailableDates() {
-        try {
-          const response = await fetch('https://api.dalchiniscotland.com/api/calendar');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          
-          const datesMap = {};
-          data.forEach(date => {
-            datesMap[date.date] = {
-              status: date.status,
-              note: date.note || '',
-              unavailableTimes: date.unavailableTimes || []
-            };
-          });
-          
-          unavailableDates = datesMap;
-          initializeDatePicker();
-        } catch (error) {
-          console.error('Error fetching calendar data:', error);
-          // Show user-friendly error message
-          const dateStatus = document.getElementById('dateStatus');
-          dateStatus.innerHTML = `
+                    const datesMap = {};
+                    data.forEach(date => {
+                        datesMap[date.date] = {
+                            status: date.status,
+                            note: date.note || '',
+                            unavailableTimes: date.unavailableTimes || []
+                        };
+                    });
+
+                    unavailableDates = datesMap;
+                    initializeDatePicker();
+                } catch (error) {
+                    console.error('Error fetching calendar data:', error);
+                    // Show user-friendly error message
+                    const dateStatus = document.getElementById('dateStatus');
+                    dateStatus.innerHTML = `
             <span style="color: #e74c3c">
               Warning: Could not load availability data. Some dates may be unavailable.
             </span>
           `;
-        }
-      }
+                }
+            }
 
-      // Initialize date picker with enhancements
-      function initializeDatePicker() {
-        const dateInput = document.getElementById('date');
-        const today = new Date();
-        const todayString = today.toISOString().split('T')[0];
-        
-        // Set min date to today
-        dateInput.min = todayString;
-        
-        // Add event listeners
-        dateInput.addEventListener('input', handleDateSelection);
-        dateInput.addEventListener('change', async function(e) {
-          const selectedDate = e.target.value;
-          if (!selectedDate) return;
-          
-          // Ensure we have the latest data for this date
-          const dateInfo = await checkDateAvailability(selectedDate);
-          
-          // Show unavailable time slots if any
-          if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
-            const timeSlotsContainer = document.createElement('div');
-            timeSlotsContainer.className = 'unavailable-times-container';
-            timeSlotsContainer.style.marginTop = '10px';
-            timeSlotsContainer.style.padding = '10px';
-            timeSlotsContainer.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
-            timeSlotsContainer.style.borderRadius = '5px';
-            
-            timeSlotsContainer.innerHTML = `
+            // Initialize date picker with enhancements
+            function initializeDatePicker() {
+                const dateInput = document.getElementById('date');
+                const today = new Date();
+                const todayString = today.toISOString().split('T')[0];
+
+                // Set min date to today
+                dateInput.min = todayString;
+
+                // Add event listeners
+                dateInput.addEventListener('input', handleDateSelection);
+                dateInput.addEventListener('change', async function (e) {
+                    const selectedDate = e.target.value;
+                    if (!selectedDate) return;
+
+                    // Ensure we have the latest data for this date
+                    const dateInfo = await checkDateAvailability(selectedDate);
+
+                    // Show unavailable time slots if any
+                    if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
+                        const timeSlotsContainer = document.createElement('div');
+                        timeSlotsContainer.className = 'unavailable-times-container';
+                        timeSlotsContainer.style.marginTop = '10px';
+                        timeSlotsContainer.style.padding = '10px';
+                        timeSlotsContainer.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
+                        timeSlotsContainer.style.borderRadius = '5px';
+
+                        timeSlotsContainer.innerHTML = `
       <p style="margin-bottom: 5px; font-size: 0.9rem; color: #f39c12">
         Unavailable Time Slots:
       </p>
       <ul style="list-style-type: none; padding-left: 5px;">
         ${dateInfo.unavailableTimes.map(time => {
-          const [start, end] = time.includes('-') ? time.split('-') : [time, time];
-          return `
+                            const [start, end] = time.includes('-') ? time.split('-') : [time, time];
+                            return `
             <li style="font-size: 0.85rem; color: #e74c3c">
               ${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end)}
             </li>
           `;
-        }).join('')}
+                        }).join('')}
       </ul>
     `;
 
-    // Add this helper function
-    function formatTimeForDisplay(time) {
-      const [hours, minutes] = time.split(':');
-      const hourNum = parseInt(hours);
-      const ampm = hourNum >= 12 ? 'PM' : 'AM';
-      const displayHour = hourNum % 12 || 12;
-      return `${displayHour}:${minutes} ${ampm}`;
-    }
-            
-          const existingContainer = document.getElementById('unavailableTimesDisplay');
-          if (existingContainer) {
-            existingContainer.replaceWith(timeSlotsContainer);
-          } else {
-            timeSlotsContainer.id = 'unavailableTimesDisplay';
-            dateInput.parentNode.insertBefore(timeSlotsContainer, dateInput.nextSibling);
-          }
-        } else {
-          const existingContainer = document.getElementById('unavailableTimesDisplay');
-          if (existingContainer) {
-            existingContainer.remove();
-          }
-        }
-      });
-    }
+                        // Add this helper function
+                        function formatTimeForDisplay(time) {
+                            const [hours, minutes] = time.split(':');
+                            const hourNum = parseInt(hours);
+                            const ampm = hourNum >= 12 ? 'PM' : 'AM';
+                            const displayHour = hourNum % 12 || 12;
+                            return `${displayHour}:${minutes} ${ampm}`;
+                        }
 
-    // Highlight unavailable dates in the picker
-    function highlightUnavailableDates() {
-      // This runs when the date picker is opened
-      setTimeout(() => {
-        const dateInput = document.getElementById('date');
-        const picker = document.querySelector('input[type="date"] + .picker');
-        
-        // Modern browsers don't allow direct styling of native date picker
-        // So we'll show the info in our custom UI instead
-      }, 100);
-    }
+                        const existingContainer = document.getElementById('unavailableTimesDisplay');
+                        if (existingContainer) {
+                            existingContainer.replaceWith(timeSlotsContainer);
+                        } else {
+                            timeSlotsContainer.id = 'unavailableTimesDisplay';
+                            dateInput.parentNode.insertBefore(timeSlotsContainer, dateInput.nextSibling);
+                        }
+                    } else {
+                        const existingContainer = document.getElementById('unavailableTimesDisplay');
+                        if (existingContainer) {
+                            existingContainer.remove();
+                        }
+                    }
+                });
+            }
 
-    // Handle date selection
-    function handleDateSelection(e) {
-      const selectedDate = e.target.value;
-      const submitBtn = document.querySelector('.submit-btn');
-      const dateStatus = document.getElementById('dateStatus');
-      const dateInfoContainer = document.getElementById('dateInfoContainer');
-      
-      dateInfoContainer.innerHTML = '';
-      dateStatus.textContent = '';
-      
-      if (!selectedDate) {
-        e.target.style.borderColor = "rgba(255, 255, 255, 0.25)";
-        e.target.style.boxShadow = "none";
-        submitBtn.disabled = false;
-        return;
-      }
+            // Highlight unavailable dates in the picker
+            function highlightUnavailableDates() {
+                // This runs when the date picker is opened
+                setTimeout(() => {
+                    const dateInput = document.getElementById('date');
+                    const picker = document.querySelector('input[type="date"] + .picker');
 
-      const dateInfo = unavailableDates[selectedDate];
-      
-      if (dateInfo) {
-        if (dateInfo.status === 'unavailable') {
-          if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
-            // Date has specific unavailable time slots
-            e.target.style.borderColor = '#f39c12';
-            e.target.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.25)';
-            submitBtn.disabled = false;
-            
-            dateStatus.innerHTML = `
+                    // Modern browsers don't allow direct styling of native date picker
+                    // So we'll show the info in our custom UI instead
+                }, 100);
+            }
+
+            // Handle date selection
+            function handleDateSelection(e) {
+                const selectedDate = e.target.value;
+                const submitBtn = document.querySelector('.submit-btn');
+                const dateStatus = document.getElementById('dateStatus');
+                const dateInfoContainer = document.getElementById('dateInfoContainer');
+
+                dateInfoContainer.innerHTML = '';
+                dateStatus.textContent = '';
+
+                if (!selectedDate) {
+                    e.target.style.borderColor = "rgba(255, 255, 255, 0.25)";
+                    e.target.style.boxShadow = "none";
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                const dateInfo = unavailableDates[selectedDate];
+
+                if (dateInfo) {
+                    if (dateInfo.status === 'unavailable') {
+                        if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
+                            // Date has specific unavailable time slots
+                            e.target.style.borderColor = '#f39c12';
+                            e.target.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.25)';
+                            submitBtn.disabled = false;
+
+                            dateStatus.innerHTML = `
               <span style="color: #f39c12">
                 This date has restricted time slots. Please check availability for your preferred time.
               </span>
               ${dateInfo.note ? `<br><small>Note: ${dateInfo.note}</small>` : ''}
             `;
-          } else {
-            // Entire date is unavailable
-            e.target.style.borderColor = '#e74c3c';
-            e.target.style.boxShadow = '0 0 15px rgba(231, 76, 60, 0.25)';
-            submitBtn.disabled = true;
-            
-            dateStatus.innerHTML = `
+                        } else {
+                            // Entire date is unavailable
+                            e.target.style.borderColor = '#e74c3c';
+                            e.target.style.boxShadow = '0 0 15px rgba(231, 76, 60, 0.25)';
+                            submitBtn.disabled = true;
+
+                            dateStatus.innerHTML = `
               <span style="color: #e74c3c">
                 This date is completely unavailable.
               </span>
               ${dateInfo.note ? `<br><small>Reason: ${dateInfo.note}</small>` : ''}
             `;
-          }
-        } else {
-          // Date is available
-          e.target.style.borderColor = '#27ae60';
-          e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
-          submitBtn.disabled = false;
-          
-          dateStatus.textContent = 'This date is available';
-          dateStatus.style.color = '#27ae60';
-        }
-      } else {
-        // Date not in cache, assume available
-        e.target.style.borderColor = '#27ae60';
-        e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
-        submitBtn.disabled = false;
-        
-        dateStatus.textContent = 'This date appears available';
-        dateStatus.style.color = '#27ae60';
-      }
-    }
+                        }
+                    } else {
+                        // Date is available
+                        e.target.style.borderColor = '#27ae60';
+                        e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
+                        submitBtn.disabled = false;
 
-    // Enhanced date availability check
-    async function checkDateAvailability(date) {
-      // First check our local cache
-      if (unavailableDates[date]) {
-        return unavailableDates[date];
-      }
-      
-      // If not in cache, fetch from server (fallback)
-      try {
-        const response = await fetch(`https://api.dalchiniscotland.com/api/calendar/date/${date}`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        // Update our local cache
-        if (data.status === 'unavailable') {
-          unavailableDates[date] = data;
-        }
-        return data;
-      } catch (error) {
-        console.error('Error checking date availability:', error);
-        return { status: 'available' };
-      }
-    }
+                        dateStatus.textContent = 'This date is available';
+                        dateStatus.style.color = '#27ae60';
+                    }
+                } else {
+                    // Date not in cache, assume available
+                    e.target.style.borderColor = '#27ae60';
+                    e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
+                    submitBtn.disabled = false;
 
-    // Add a new function to check time slot availability
-    function isTimeSlotAvailable(dateInfo, startTime, endTime) {
-  if (!dateInfo || dateInfo.status !== 'unavailable') return true;
-  if (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0) return true;
-  
-  // Convert times to minutes for easier comparison
-  const startMinutes = convertTimeToMinutes(startTime);
-  const endMinutes = convertTimeToMinutes(endTime);
-  
-  // Check against each unavailable time slot
-  for (const unavailableTime of dateInfo.unavailableTimes) {
-    // Handle both single times (e.g., "10:00") and ranges (e.g., "10:00-11:00")
-    const [unavailableStart, unavailableEnd] = unavailableTime.includes('-') 
-      ? unavailableTime.split('-') 
-      : [unavailableTime, unavailableTime];
-    
-    const unavailableStartMinutes = convertTimeToMinutes(unavailableStart);
-    const unavailableEndMinutes = unavailableEnd 
-      ? convertTimeToMinutes(unavailableEnd)
-      : unavailableStartMinutes + 60; // Default to 1 hour slot if no end time
-    
-    // Check for overlap - if any part of the selected time falls within an unavailable slot
-    if (
-      (startMinutes >= unavailableStartMinutes && startMinutes < unavailableEndMinutes) ||
-      (endMinutes > unavailableStartMinutes && endMinutes <= unavailableEndMinutes) ||
-      (startMinutes <= unavailableStartMinutes && endMinutes >= unavailableEndMinutes)
-    ) {
-      return false; // There's an overlap
-    }
-  }
-  
-  return true; // No overlap found
-}
-    // Helper function to convert HH:MM to minutes
-    function convertTimeToMinutes(time) {
-      const [hours, minutes] = time.split(':').map(Number);
-      return hours * 60 + minutes;
-    }
+                    dateStatus.textContent = 'This date appears available';
+                    dateStatus.style.color = '#27ae60';
+                }
+            }
 
-    // Call this when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchUnavailableDates();
+            // Enhanced date availability check
+            async function checkDateAvailability(date) {
+                // First check our local cache
+                if (unavailableDates[date]) {
+                    return unavailableDates[date];
+                }
 
-      // Also check the initial date if one is pre-selected
-      const initialDate = document.getElementById('date').value;
-      if (initialDate) {
-        const event = { target: { value: initialDate } };
-        document.getElementById('date').dispatchEvent(new Event('change'));
-      }
-    });
+                // If not in cache, fetch from server (fallback)
+                try {
+                    const response = await fetch(`https://api.dalchiniscotland.com/api/calendar/date/${date}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
 
-    // Reset email field styling on focus
-    document.getElementById("email").addEventListener("focus", function (e) {
-      this.style.borderColor = "#d4af37";
-      this.style.boxShadow = "0 0 15px rgba(212, 175, 55, 0.25)";
-    });
+                    const data = await response.json();
+                    // Update our local cache
+                    if (data.status === 'unavailable') {
+                        unavailableDates[date] = data;
+                    }
+                    return data;
+                } catch (error) {
+                    console.error('Error checking date availability:', error);
+                    return { status: 'available' };
+                }
+            }
 
-    // Reservation statuses and messages
-    const statusOptions = [
-      {
-        status: "on-hold",
-        icon: "⏳",
-        title: "Reservation On Hold",
-        message:
-          "Thank you for your reservation request! We have received your booking and it is currently being reviewed by our team. You will receive a confirmation email within 2-4 hours.",
-        class: "status-on-hold",
-      },
-      {
-        status: "confirmed",
-        icon: "✅",
-        title: "Reservation Confirmed",
-        message:
-          "Excellent! Your table has been reserved successfully. We look forward to welcoming you to Dalchini Tomintoul. A confirmation email has been sent to you with all the details.",
-        class: "status-confirmed",
-      },
-      {
-        status: "rejected",
-        icon: "❌",
-        title: "Reservation Unavailable",
-        message:
-          "We apologize, but we are unable to accommodate your reservation request for the selected date and time. Please try selecting an alternative date or contact us directly.",
-        class: "status-rejected",
-      },
-    ];
+            // Add a new function to check time slot availability
+            function isTimeSlotAvailable(dateInfo, startTime, endTime) {
+                if (!dateInfo || dateInfo.status !== 'unavailable') return true;
+                if (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0) return true;
 
-    document.getElementById("reservationForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+                // Convert times to minutes for easier comparison
+                const startMinutes = convertTimeToMinutes(startTime);
+                const endMinutes = convertTimeToMinutes(endTime);
 
-      // Get form data
-      const formData = {
-        name: document.getElementById("name").value,
-        phone: document.getElementById("phone").value,
-        email: document.getElementById("email").value,
-        persons: document.getElementById("persons").value,
-        date: document.getElementById("date").value,
-        startTime: document.getElementById("startTime").value,
-        endTime: document.getElementById("endTime").value,
-      };
+                // Check against each unavailable time slot
+                for (const unavailableTime of dateInfo.unavailableTimes) {
+                    // Handle both single times (e.g., "10:00") and ranges (e.g., "10:00-11:00")
+                    const [unavailableStart, unavailableEnd] = unavailableTime.includes('-')
+                        ? unavailableTime.split('-')
+                        : [unavailableTime, unavailableTime];
 
-      console.log('Form submitted with data:', formData);
+                    const unavailableStartMinutes = convertTimeToMinutes(unavailableStart);
+                    const unavailableEndMinutes = unavailableEnd
+                        ? convertTimeToMinutes(unavailableEnd)
+                        : unavailableStartMinutes + 60; // Default to 1 hour slot if no end time
 
-      // --- Client-side Validation ---
-      if (!formData.name || !formData.phone || !formData.email || !formData.persons || !formData.date || !formData.startTime || !formData.endTime) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Missing Information",
-          message: "Please fill in all required fields.",
-          class: "status-rejected"
-        });
-        return;
-      }
+                    // Check for overlap - if any part of the selected time falls within an unavailable slot
+                    if (
+                        (startMinutes >= unavailableStartMinutes && startMinutes < unavailableEndMinutes) ||
+                        (endMinutes > unavailableStartMinutes && endMinutes <= unavailableEndMinutes) ||
+                        (startMinutes <= unavailableStartMinutes && endMinutes >= unavailableEndMinutes)
+                    ) {
+                        return false; // There's an overlap
+                    }
+                }
 
-      if (formData.startTime >= formData.endTime) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Invalid Time Range",
-          message: "End time must be after start time.",
-          class: "status-rejected"
-        });
-        return;
-      }
+                return true; // No overlap found
+            }
+            // Helper function to convert HH:MM to minutes
+            function convertTimeToMinutes(time) {
+                const [hours, minutes] = time.split(':').map(Number);
+                return hours * 60 + minutes;
+            }
 
-      // Fetch the latest availability data for the selected date
-      const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);
-      
-      // Check if the entire date is marked unavailable without specific time slots
-      if (dateInfo && dateInfo.status === 'unavailable' && (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0)) {
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Date Completely Unavailable",
-          message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
-          class: "status-rejected"
-        });
-        return;
-      }
+            // Call this when page loads
+            document.addEventListener('DOMContentLoaded', function () {
+                fetchUnavailableDates();
 
-      // Check time slot availability
-      if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
-        let unavailableSlots = [];
-        if (dateInfo.unavailableTimes) {
-          unavailableSlots = dateInfo.unavailableTimes.map(slot => {
-            const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
-            return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end || start)}`;
-          });
-        }
-        
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Selected Time Slot Unavailable",
-          message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
-          class: "status-rejected"
-        });
-        return;
-      }
+                // Also check the initial date if one is pre-selected
+                const initialDate = document.getElementById('date').value;
+                if (initialDate) {
+                    const event = { target: { value: initialDate } };
+                    document.getElementById('date').dispatchEvent(new Event('change'));
+                }
+            });
 
-      // Simulate processing delay
-      const submitBtn = document.querySelector(".submit-btn");
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = "Sending Verification...";
-      submitBtn.disabled = true;
+            // Reset email field styling on focus
+            document.getElementById("email").addEventListener("focus", function (e) {
+                this.style.borderColor = "#d4af37";
+                this.style.boxShadow = "0 0 15px rgba(212, 175, 55, 0.25)";
+            });
 
-      try {
-        // Send reservation data to the API
-        const response = await fetch('https://booking.dalchini.com/api/reservations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData)
-        });
+            // Reservation statuses and messages
+            const statusOptions = [
+                {
+                    status: "on-hold",
+                    icon: "⏳",
+                    title: "Reservation On Hold",
+                    message:
+                        "Thank you for your reservation request! We have received your booking and it is currently being reviewed by our team. You will receive a confirmation email within 2-4 hours.",
+                    class: "status-on-hold",
+                },
+                {
+                    status: "confirmed",
+                    icon: "✅",
+                    title: "Reservation Confirmed",
+                    message:
+                        "Excellent! Your table has been reserved successfully. We look forward to welcoming you to Dalchini Tomintoul. A confirmation email has been sent to you with all the details.",
+                    class: "status-confirmed",
+                },
+                {
+                    status: "rejected",
+                    icon: "❌",
+                    title: "Reservation Unavailable",
+                    message:
+                        "We apologize, but we are unable to accommodate your reservation request for the selected date and time. Please try selecting an alternative date or contact us directly.",
+                    class: "status-rejected",
+                },
+            ];
 
-        if (!response.ok) {
-          throw new Error('Failed to create reservation');
-        }
+            document.getElementById("reservationForm").addEventListener("submit", async function (e) {
+                e.preventDefault();
 
-        const data = await response.json();
-        console.log('Reservation created:', data);
+                // Get form data
+                const formData = {
+                    name: document.getElementById("name").value,
+                    phone: document.getElementById("phone").value,
+                    email: document.getElementById("email").value,
+                    persons: document.getElementById("persons").value,
+                    date: document.getElementById("date").value,
+                    startTime: document.getElementById("startTime").value,
+                    endTime: document.getElementById("endTime").value,
+                };
 
-        // Show email verification step
-        showEmailVerification(formData);
+                console.log('Form submitted with data:', formData);
 
-        // Store the verification token
-        window.currentReservation = {
-          ...formData,
-          verificationToken: data.verificationToken
-        };
+                // --- Client-side Validation ---
+                if (!formData.name || !formData.phone || !formData.email || !formData.persons || !formData.date || !formData.startTime || !formData.endTime) {
+                    showStatusModal({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Missing Information",
+                        message: "Please fill in all required fields.",
+                        class: "status-rejected"
+                    });
+                    return;
+                }
 
-      } catch (error) {
-        console.error('Error creating reservation:', error);
-        showStatusModal({
-          status: "rejected",
-          icon: "❌",
-          title: "Error",
-          message: "Failed to create reservation. Please try again later.",
-          class: "status-rejected"
-        });
-      } finally {
-        // Reset button
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      }
-    });
+                if (formData.startTime >= formData.endTime) {
+                    showStatusModal({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Invalid Time Range",
+                        message: "End time must be after start time.",
+                        class: "status-rejected"
+                    });
+                    return;
+                }
 
-    function showEmailVerification(formData) {
-      const modal = document.getElementById("statusModal");
-      const emailVerification = document.getElementById("emailVerification");
-      const emailPreview = document.getElementById("emailPreview");
-      const statusContent = document.getElementById("statusContent");
+                // Fetch the latest availability data for the selected date
+                const dateInfo = unavailableDates[formData.date] || await checkDateAvailability(formData.date);
 
-      // Hide status content, show email verification
-      statusContent.style.display = "none";
-      emailVerification.style.display = "block";
-      emailPreview.style.display = "block";
+                // Check if the entire date is marked unavailable without specific time slots
+                if (dateInfo && dateInfo.status === 'unavailable' && (!dateInfo.unavailableTimes || dateInfo.unavailableTimes.length === 0)) {
+                    showStatusModal({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Date Completely Unavailable",
+                        message: `This date is completely unavailable. ${dateInfo.note ? `Reason: ${dateInfo.note}` : ''}`,
+                        class: "status-rejected"
+                    });
+                    return;
+                }
 
-      // Fill in email details
-      document.getElementById("userEmail").textContent = formData.email;
-      document.getElementById("emailCustomerName").textContent =
-        formData.name;
-      document.getElementById("emailReservationName").textContent =
-        formData.name;
-      document.getElementById("emailReservationDate").textContent = new Date(
-        formData.date
-      ).toLocaleDateString("en-GB", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      document.getElementById("emailReservationTime").textContent =
-        formData.startTime + " - " + formData.endTime;
-      document.getElementById("emailReservationGuests").textContent =
-        formData.persons;
-      document.getElementById("emailReservationPhone").textContent =
-        formData.phone;
+                // Check time slot availability
+                if (!isTimeSlotAvailable(dateInfo, formData.startTime, formData.endTime)) {
+                    let unavailableSlots = [];
+                    if (dateInfo.unavailableTimes) {
+                        unavailableSlots = dateInfo.unavailableTimes.map(slot => {
+                            const [start, end] = slot.includes('-') ? slot.split('-') : [slot, slot];
+                            return `${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end || start)}`;
+                        });
+                    }
 
-      // Store form data for later use
-      window.currentReservation = formData;
+                    showStatusModal({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Selected Time Slot Unavailable",
+                        message: `The selected time slot conflicts with unavailable periods: \n\n${unavailableSlots.join('\n')}\n\nPlease choose a different time.`,
+                        class: "status-rejected"
+                    });
+                    return;
+                }
 
-      modal.style.display = "block";
+                // Simulate processing delay
+                const submitBtn = document.querySelector(".submit-btn");
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = "Sending Verification...";
+                submitBtn.disabled = true;
 
-      // Simulate email preview after a short delay (optional, depends on desired flow)
-      setTimeout(() => {
-        // In a real flow, you'd wait for email verification confirmation before showing final status.
-        // For this simulation, we skip the email preview and jump to a simulated final status after verification send.
-        showFinalStatus({
-          status: "on-hold",
-          icon: "⏳",
-          title: "Reservation On Hold",
-          message: "Your reservation request has been received and is on hold pending email verification.",
-          class: "status-on-hold"
-        });
-      }, 3000); // Simulate delay before showing "on hold" status after sending email
-    }
+                try {
+                    // Send reservation data to the API
+                    const response = await fetch('https://api.dalchiniscotland.com/api/reservations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
 
-    async function verifyEmail() {
-      if (!window.currentReservation?.verificationToken) {
-        console.error('No verification token found');
-        return;
-      }
+                    if (!response.ok) {
+                        throw new Error('Failed to create reservation');
+                    }
 
-      const modal = document.getElementById("statusModal");
-      document.getElementById("statusContent").style.display = "block";
-      document.getElementById("emailVerification").style.display = "none";
-      document.getElementById("emailPreview").style.display = "none";
+                    const data = await response.json();
+                    console.log('Reservation created:', data);
 
-      document.getElementById("statusIcon").textContent = "⏳";
-      document.getElementById("statusTitle").textContent = "Verifying Email...";
-      document.getElementById("statusMessage").textContent = "Please wait while we verify your email address.";
-      document.getElementById("statusIcon").className = "status-icon status-on-hold";
-      document.getElementById("statusTitle").className = "status-title status-on-hold";
+                    // Show email verification step
+                    showEmailVerification(formData);
 
-      try {
-        const response = await fetch(`https://booking.dalchini.com/api/reservations/verify/${window.currentReservation.verificationToken}`, {
-          method: 'POST'
-        });
+                    // Store the verification token
+                    window.currentReservation = {
+                        ...formData,
+                        verificationToken: data.verificationToken
+                    };
 
-        if (!response.ok) {
-          throw new Error('Verification failed');
-        }
+                } catch (error) {
+                    console.error('Error creating reservation:', error);
+                    showStatusModal({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Error",
+                        message: "Failed to create reservation. Please try again later.",
+                        class: "status-rejected"
+                    });
+                } finally {
+                    // Reset button
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
 
-        const data = await response.json();
-        console.log('Reservation verified:', data);
+            function showEmailVerification(formData) {
+                const modal = document.getElementById("statusModal");
+                const emailVerification = document.getElementById("emailVerification");
+                const emailPreview = document.getElementById("emailPreview");
+                const statusContent = document.getElementById("statusContent");
 
-        // Show success status
-        showFinalStatus({
-          status: "confirmed",
-          icon: "✅",
-          title: "Reservation Confirmed",
-          message: "Your reservation has been confirmed! We look forward to welcoming you.",
-          class: "status-confirmed"
-        });
+                // Hide status content, show email verification
+                statusContent.style.display = "none";
+                emailVerification.style.display = "block";
+                emailPreview.style.display = "block";
 
-        // Reset form
-        document.getElementById("reservationForm").reset();
-        handleDateSelection({ target: document.getElementById("date") });
+                // Fill in email details
+                document.getElementById("userEmail").textContent = formData.email;
+                document.getElementById("emailCustomerName").textContent =
+                    formData.name;
+                document.getElementById("emailReservationName").textContent =
+                    formData.name;
+                document.getElementById("emailReservationDate").textContent = new Date(
+                    formData.date
+                ).toLocaleDateString("en-GB", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                });
+                document.getElementById("emailReservationTime").textContent =
+                    formData.startTime + " - " + formData.endTime;
+                document.getElementById("emailReservationGuests").textContent =
+                    formData.persons;
+                document.getElementById("emailReservationPhone").textContent =
+                    formData.phone;
 
-      } catch (error) {
-        console.error('Error verifying reservation:', error);
-        showFinalStatus({
-          status: "rejected",
-          icon: "❌",
-          title: "Verification Failed",
-          message: "Failed to verify your reservation. Please try again or contact us.",
-          class: "status-rejected"
-        });
-      }
-    }
+                // Store form data for later use
+                window.currentReservation = formData;
 
-    function showFinalStatus(statusInfo) {
-      const modal = document.getElementById("statusModal");
-      const statusContent = document.getElementById("statusContent");
-      const emailVerification = document.getElementById("emailVerification");
-      const emailPreview = document.getElementById("emailPreview");
+                modal.style.display = "block";
 
-      // Show status content, hide email verification and preview
-      statusContent.style.display = "block";
-      emailVerification.style.display = "none";
-      emailPreview.style.display = "none";
+                // Simulate email preview after a short delay (optional, depends on desired flow)
+                setTimeout(() => {
+                    // In a real flow, you'd wait for email verification confirmation before showing final status.
+                    // For this simulation, we skip the email preview and jump to a simulated final status after verification send.
+                    showFinalStatus({
+                        status: "on-hold",
+                        icon: "⏳",
+                        title: "Reservation On Hold",
+                        message: "Your reservation request has been received and is on hold pending email verification.",
+                        class: "status-on-hold"
+                    });
+                }, 3000); // Simulate delay before showing "on hold" status after sending email
+            }
 
-      const icon = document.getElementById("statusIcon");
-      const title = document.getElementById("statusTitle");
-      const message = document.getElementById("statusMessage");
+            async function verifyEmail() {
+                if (!window.currentReservation?.verificationToken) {
+                    console.error('No verification token found');
+                    return;
+                }
 
-      icon.textContent = statusInfo.icon;
-      title.textContent = statusInfo.title;
+                const modal = document.getElementById("statusModal");
+                document.getElementById("statusContent").style.display = "block";
+                document.getElementById("emailVerification").style.display = "none";
+                document.getElementById("emailPreview").style.display = "none";
 
-      // Customize message based on status and if reservation details were captured
-      let finalMessage = statusInfo.message;
-      if (statusInfo.status === "confirmed" && window.currentReservation && window.currentReservation.email) {
-        finalMessage += " A confirmation email has been sent to " + window.currentReservation.email + ".";
-      } else if (statusInfo.status !== "rejected" && window.currentReservation && window.currentReservation.email) {
-        finalMessage += " You will be notified via email at " + window.currentReservation.email + " regarding the final status.";
-      }
+                document.getElementById("statusIcon").textContent = "⏳";
+                document.getElementById("statusTitle").textContent = "Verifying Email...";
+                document.getElementById("statusMessage").textContent = "Please wait while we verify your email address.";
+                document.getElementById("statusIcon").className = "status-icon status-on-hold";
+                document.getElementById("statusTitle").className = "status-title status-on-hold";
 
-      message.textContent = finalMessage;
+                try {
+                    const response = await fetch(`https://api.dalchiniscotland.com/api/reservations/verify/${window.currentReservation.verificationToken}`, {
+                        method: 'POST'
+                    });
 
-      // Apply status-specific styling
-      title.className = `status-title ${statusInfo.class}`;
-      icon.className = `status-icon ${statusInfo.class}`;
+                    if (!response.ok) {
+                        throw new Error('Verification failed');
+                    }
 
-      modal.style.display = "block";
+                    const data = await response.json();
+                    console.log('Reservation verified:', data);
 
-      // Clear stored reservation data after showing final status
-      window.currentReservation = null;
-    }
+                    // Show success status
+                    showFinalStatus({
+                        status: "confirmed",
+                        icon: "✅",
+                        title: "Reservation Confirmed",
+                        message: "Your reservation has been confirmed! We look forward to welcoming you.",
+                        class: "status-confirmed"
+                    });
 
-    function showStatusModal(statusInfo) {
-      const modal = document.getElementById("statusModal");
-      const statusContent = document.getElementById("statusContent");
-      const emailVerification = document.getElementById("emailVerification");
-      const emailPreview = document.getElementById("emailPreview");
+                    // Reset form
+                    document.getElementById("reservationForm").reset();
+                    handleDateSelection({ target: document.getElementById("date") });
 
-      // Show status content, hide email verification and preview
-      statusContent.style.display = "block";
-      emailVerification.style.display = "none";
-      emailPreview.style.display = "none";
+                } catch (error) {
+                    console.error('Error verifying reservation:', error);
+                    showFinalStatus({
+                        status: "rejected",
+                        icon: "❌",
+                        title: "Verification Failed",
+                        message: "Failed to verify your reservation. Please try again or contact us.",
+                        class: "status-rejected"
+                    });
+                }
+            }
 
-      const icon = document.getElementById("statusIcon");
-      const title = document.getElementById("statusTitle");
-      const message = document.getElementById("statusMessage");
+            function showFinalStatus(statusInfo) {
+                const modal = document.getElementById("statusModal");
+                const statusContent = document.getElementById("statusContent");
+                const emailVerification = document.getElementById("emailVerification");
+                const emailPreview = document.getElementById("emailPreview");
 
-      icon.textContent = statusInfo.icon;
-      title.textContent = statusInfo.title;
-      message.textContent = statusInfo.message;
+                // Show status content, hide email verification and preview
+                statusContent.style.display = "block";
+                emailVerification.style.display = "none";
+                emailPreview.style.display = "none";
 
-      // Apply status-specific styling
-      title.className = `status-title ${statusInfo.class}`;
-      icon.className = `status-icon ${statusInfo.class}`;
+                const icon = document.getElementById("statusIcon");
+                const title = document.getElementById("statusTitle");
+                const message = document.getElementById("statusMessage");
 
-      modal.style.display = "block";
+                icon.textContent = statusInfo.icon;
+                title.textContent = statusInfo.title;
 
-      // Clear stored reservation data if showing a final status (not verification step)
-      if (statusInfo.status !== undefined) { // Assuming statusInfo always has a status for final states
-        window.currentReservation = null;
-      }
-    }
+                // Customize message based on status and if reservation details were captured
+                let finalMessage = statusInfo.message;
+                if (statusInfo.status === "confirmed" && window.currentReservation && window.currentReservation.email) {
+                    finalMessage += " A confirmation email has been sent to " + window.currentReservation.email + ".";
+                } else if (statusInfo.status !== "rejected" && window.currentReservation && window.currentReservation.email) {
+                    finalMessage += " You will be notified via email at " + window.currentReservation.email + " regarding the final status.";
+                }
 
-    function closeModal() {
-      document.getElementById("statusModal").style.display = "none";
-    }
+                message.textContent = finalMessage;
 
-    // Close modal when clicking outside
-    window.onclick = function (event) {
-      const modal = document.getElementById("statusModal");
-      if (event.target == modal) {
-        modal.style.display = "none";
-      }
-    };
+                // Apply status-specific styling
+                title.className = `status-title ${statusInfo.class}`;
+                icon.className = `status-icon ${statusInfo.class}`;
 
-    // Close modal with Escape key
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        closeModal();
-      }
-    });
+                modal.style.display = "block";
 
-    // Add date input change handler
-    // The handleDateSelection function is now the primary handler for date input changes
-    document.getElementById("date").addEventListener("change", handleDateSelection);
-    document.getElementById("date").addEventListener("input", handleDateSelection); // Use input for immediate feedback as date is typed/selected
+                // Clear stored reservation data after showing final status
+                window.currentReservation = null;
+            }
 
-    // Initial call to fetch data and initialize date picker
-    // Call this when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchUnavailableDates();
+            function showStatusModal(statusInfo) {
+                const modal = document.getElementById("statusModal");
+                const statusContent = document.getElementById("statusContent");
+                const emailVerification = document.getElementById("emailVerification");
+                const emailPreview = document.getElementById("emailPreview");
 
-      // Also trigger the date selection handler if an initial date is pre-selected in the input
-      const initialDate = document.getElementById('date').value;
-      if (initialDate) {
-        // Use a slight delay to ensure fetchUnavailableDates has potentially populated the cache
-        setTimeout(() => {
-          handleDateSelection({ target: document.getElementById('date') });
-        }, 100); // Adjust delay if needed
-      }
-    });
+                // Show status content, hide email verification and preview
+                statusContent.style.display = "block";
+                emailVerification.style.display = "none";
+                emailPreview.style.display = "none";
 
-    </script>
-  </body>
+                const icon = document.getElementById("statusIcon");
+                const title = document.getElementById("statusTitle");
+                const message = document.getElementById("statusMessage");
+
+                icon.textContent = statusInfo.icon;
+                title.textContent = statusInfo.title;
+                message.textContent = statusInfo.message;
+
+                // Apply status-specific styling
+                title.className = `status-title ${statusInfo.class}`;
+                icon.className = `status-icon ${statusInfo.class}`;
+
+                modal.style.display = "block";
+
+                // Clear stored reservation data if showing a final status (not verification step)
+                if (statusInfo.status !== undefined) { // Assuming statusInfo always has a status for final states
+                    window.currentReservation = null;
+                }
+            }
+
+            function closeModal() {
+                document.getElementById("statusModal").style.display = "none";
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                const modal = document.getElementById("statusModal");
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+
+            // Close modal with Escape key
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") {
+                    closeModal();
+                }
+            });
+
+            // Add date input change handler
+            // The handleDateSelection function is now the primary handler for date input changes
+            document.getElementById("date").addEventListener("change", handleDateSelection);
+            document.getElementById("date").addEventListener("input", handleDateSelection); // Use input for immediate feedback as date is typed/selected
+
+            // Initial call to fetch data and initialize date picker
+            // Call this when page loads
+            document.addEventListener('DOMContentLoaded', function () {
+                fetchUnavailableDates();
+
+                // Also trigger the date selection handler if an initial date is pre-selected in the input
+                const initialDate = document.getElementById('date').value;
+                if (initialDate) {
+                    // Use a slight delay to ensure fetchUnavailableDates has potentially populated the cache
+                    setTimeout(() => {
+                        handleDateSelection({ target: document.getElementById('date') });
+                    }, 100); // Adjust delay if needed
+                }
+            });
+
+        </script>
+    </body>
+
 </html>
