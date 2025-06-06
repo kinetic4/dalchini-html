@@ -1025,19 +1025,6 @@
                 window.currentReservation = formData;
 
                 modal.style.display = "block";
-
-                // Simulate email preview after a short delay (optional, depends on desired flow)
-                setTimeout(() => {
-                    // In a real flow, you'd wait for email verification confirmation before showing final status.
-                    // For this simulation, we skip the email preview and jump to a simulated final status after verification send.
-                    showFinalStatus({
-                        status: "on-hold",
-                        icon: "⏳",
-                        title: "Reservation On Hold",
-                        message: "Your reservation request has been received and is on hold pending email verification.",
-                        class: "status-on-hold"
-                    });
-                }, 3000); // Simulate delay before showing "on hold" status after sending email
             }
 
             async function verifyEmail() {
@@ -1059,7 +1046,10 @@
 
                 try {
                     const response = await fetch(`https://api.dalchiniscotland.com/api/reservations/verify/${window.currentReservation.verificationToken}`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
                     });
 
                     if (!response.ok) {

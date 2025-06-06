@@ -23,13 +23,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Attach transporter to request object
+// Add this middleware in your server.js
 app.use((req, res, next) => {
-    req.transporter = transporter;
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     next();
 });
 
-// SMTP Transporter setup
+// FIXED: SMTP Transporter setup - moved before middleware that uses it
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -40,13 +40,26 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-// Verify transporter connection (optional but recommended)
-transporter.verify(function (error, success) {
+// Verify transporter connection
+// After creating the transporter
+transporter.verify(function(error, success) {
     if (error) {
-        console.error('❌ SMTP transporter verification failed:', error);
+      console.error('SMTP Connection Error:', {
+        error: error.message,
+        stack: error.stack,
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: process.env.SMTP_SECURE
+      });
     } else {
-        console.log('✅ SMTP transporter is ready to send emails');
+      console.log('SMTP Server is ready to take our messages');
     }
+  });
+
+// FIXED: Attach transporter to request object - moved after transporter creation
+app.use((req, res, next) => {
+    req.transporter = transporter;
+    next();
 });
 
 // Request logging middleware

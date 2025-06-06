@@ -64,6 +64,7 @@ export default function OrdersDatatableV1() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
+      // First update the status
       const response = await fetch(`${API_URL}/${id}/status`, {
         method: 'PATCH',
         headers: {
@@ -73,20 +74,30 @@ export default function OrdersDatatableV1() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update status');
       }
+
+      const updatedReservation = await response.json();
 
       // Update local state
       setReservations(prevReservations =>
         prevReservations.map(reservation =>
           reservation._id === id
-            ? { ...reservation, status: newStatus }
+            ? updatedReservation
             : reservation
         )
       );
+
+      // Show success message
+      if (newStatus === 'confirmed') {
+        alert('Status updated to confirmed and confirmation email sent!');
+      } else {
+        alert(`Status updated to ${newStatus}`);
+      }
     } catch (error) {
       console.error('Error updating reservation status:', error);
-      alert('Failed to update status. Please try again.');
+      alert(`Failed to update status: ${error.message}`);
     }
   };
 
@@ -189,7 +200,7 @@ export default function OrdersDatatableV1() {
         } else if (typeof columnIdOrObj === 'object') {
           // Handle multiple field updates from the modal
           handleUpdateReservation(reservation._id, columnIdOrObj);
-        }
+          }
       },
       deleteRow: (row) => {
         skipAutoResetPageIndex();
