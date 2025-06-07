@@ -496,7 +496,7 @@
                 <div id="emailPreview" class="email-preview" style="display: none">
                     <div class="email-header">
                         <div class="email-subject">
-                            Dalchini Tomintoul - Email Verification Required
+                            Dalchini Tomintoul - Booking Reservation 
                         </div>
                         <div class="email-from">
                             From: reservations@dalchinitomintoul.com
@@ -505,14 +505,12 @@
                     <div class="email-body">
                         <p>Dear <span id="emailCustomerName"></span>,</p>
                         <p>
-                            Thank you for choosing Dalchini Tomintoul! To complete your
-                            reservation, please verify your email address by clicking the
-                            button below:
+                            We’ve successfully received your table booking request. Your reservation details have been forwarded to the restaurant team. Once your request is reviewed and confirmed, you will receive a confirmation email at the same email address you provided
                         </p>
 
-                        <button class="email-button" onclick="verifyEmail()">
+                        <!-- <button class="email-button" onclick="verifyEmail()">
                             Verify Email Address
-                        </button>
+                        </button> -->
 
                         <div class="reservation-details">
                             <strong>Your Reservation Details:</strong><br />
@@ -561,6 +559,8 @@
                     this.value = this.value.slice(0, 10);
                 }
             });
+
+            
 
             // Real-time email validation visual feedback
             document.getElementById("email").addEventListener("blur", function (e) {
@@ -612,6 +612,98 @@
                 }
             }
 
+            // Add these helper functions at the top of your script section
+function formatTimeForDisplay(time) {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hourNum = parseInt(hours);
+    const ampm = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+async function checkDateAvailability(date) {
+    // First check our local cache
+    if (unavailableDates[date]) {
+        return unavailableDates[date];
+    }
+
+    // If not in cache, fetch from server (fallback)
+    try {
+        const response = await fetch(`https://api.dalchiniscotland.com/api/calendar/date/${date}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const data = await response.json();
+        // Update our local cache
+        if (data.status === 'unavailable') {
+            unavailableDates[date] = data;
+        }
+        return data;
+    } catch (error) {
+        console.error('Error checking date availability:', error);
+        return { status: 'available' };
+    }
+}
+
+// Then update your initializeDatePicker function to use these:
+function initializeDatePicker() {
+    const dateInput = document.getElementById('date');
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+
+    // Set min date to today
+    dateInput.min = todayString;
+
+    // Add event listeners
+    dateInput.addEventListener('input', handleDateSelection);
+    dateInput.addEventListener('change', async function (e) {
+        const selectedDate = e.target.value;
+        if (!selectedDate) return;
+
+        // Ensure we have the latest data for this date
+        const dateInfo = await checkDateAvailability(selectedDate);
+
+        // Show unavailable time slots if any
+        if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
+            const timeSlotsContainer = document.createElement('div');
+            timeSlotsContainer.className = 'unavailable-times-container';
+            timeSlotsContainer.style.marginTop = '10px';
+            timeSlotsContainer.style.padding = '10px';
+            timeSlotsContainer.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
+            timeSlotsContainer.style.borderRadius = '5px';
+
+            timeSlotsContainer.innerHTML = `
+                <p style="margin-bottom: 5px; font-size: 0.9rem; color: #f39c12">
+                    Unavailable Time Slots:
+                </p>
+                <ul style="list-style-type: none; padding-left: 5px;">
+                    ${dateInfo.unavailableTimes.map(time => {
+                        const [start, end] = time.includes('-') ? time.split('-') : [time, time];
+                        return `
+                            <li style="font-size: 0.85rem; color: #e74c3c">
+                                ${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end)}
+                            </li>
+                        `;
+                    }).join('')}
+                </ul>
+            `;
+
+            const existingContainer = document.getElementById('unavailableTimesDisplay');
+            if (existingContainer) {
+                existingContainer.replaceWith(timeSlotsContainer);
+            } else {
+                timeSlotsContainer.id = 'unavailableTimesDisplay';
+                dateInput.parentNode.insertBefore(timeSlotsContainer, dateInput.nextSibling);
+            }
+        } else {
+            const existingContainer = document.getElementById('unavailableTimesDisplay');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+        }
+    });
+}
+
             // Initialize date picker with enhancements
             function initializeDatePicker() {
                 const dateInput = document.getElementById('date');
@@ -657,12 +749,12 @@
 
                         // Add this helper function
                         function formatTimeForDisplay(time) {
-                            const [hours, minutes] = time.split(':');
-                            const hourNum = parseInt(hours);
-                            const ampm = hourNum >= 12 ? 'PM' : 'AM';
-                            const displayHour = hourNum % 12 || 12;
-                            return `${displayHour}:${minutes} ${ampm}`;
-                        }
+    const [hours, minutes] = time.split(':');
+    const hourNum = parseInt(hours);
+    const ampm = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
 
                         const existingContainer = document.getElementById('unavailableTimesDisplay');
                         if (existingContainer) {
@@ -693,100 +785,146 @@
             }
 
             // Handle date selection
-            function handleDateSelection(e) {
-                const selectedDate = e.target.value;
-                const submitBtn = document.querySelector('.submit-btn');
-                const dateStatus = document.getElementById('dateStatus');
-                const dateInfoContainer = document.getElementById('dateInfoContainer');
-                const unavailableTimesDisplay = document.getElementById('unavailableTimesDisplay');
+         // Global variable to track if we've already shown the time slots
+// Global variable to track current displayed date
+let currentDisplayedDate = null;
 
-                // Clear previous displays
-                dateInfoContainer.innerHTML = '';
-                dateStatus.textContent = '';
-                if (unavailableTimesDisplay) {
-                    unavailableTimesDisplay.remove();
+function handleDateSelection(e) {
+    const selectedDate = e.target.value;
+    const submitBtn = document.querySelector('.submit-btn');
+    const dateStatus = document.getElementById('dateStatus');
+    const dateInput = document.getElementById('date');
+
+    // Clear previous status
+    dateStatus.textContent = '';
+
+    // Remove any existing time slots display if date changed
+    if (currentDisplayedDate !== selectedDate) {
+        const existingContainer = document.getElementById('unavailableTimesDisplay');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+        currentDisplayedDate = selectedDate;
+    }
+
+    if (!selectedDate) {
+        e.target.style.borderColor = "rgba(255, 255, 255, 0.25)";
+        e.target.style.boxShadow = "none";
+        submitBtn.disabled = false;
+        return;
+    }
+
+    const dateInfo = unavailableDates[selectedDate];
+
+    if (dateInfo) {
+        if (dateInfo.status === 'unavailable') {
+            if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
+                // Date has specific unavailable time slots
+                e.target.style.borderColor = '#f39c12';
+                e.target.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.25)';
+                submitBtn.disabled = false;
+
+                dateStatus.innerHTML = `
+                    <span style="color: #f39c12">
+                        This date has restricted time slots.
+                    </span>
+                `;
+
+                // Only show time slots if not already displayed
+                if (!document.getElementById('unavailableTimesDisplay')) {
+                    showUnavailableTimeSlots(dateInfo.unavailableTimes);
                 }
+            } else {
+                // Entire date is unavailable
+                e.target.style.borderColor = '#e74c3c';
+                e.target.style.boxShadow = '0 0 15px rgba(231, 76, 60, 0.25)';
+                submitBtn.disabled = true;
 
-                if (!selectedDate) {
-                    e.target.style.borderColor = "rgba(255, 255, 255, 0.25)";
-                    e.target.style.boxShadow = "none";
-                    submitBtn.disabled = false;
-                    return;
-                }
-
-                const dateInfo = unavailableDates[selectedDate];
-
-                if (dateInfo) {
-                    if (dateInfo.status === 'unavailable') {
-                        if (dateInfo.unavailableTimes && dateInfo.unavailableTimes.length > 0) {
-                            // Date has specific unavailable time slots
-                            e.target.style.borderColor = '#f39c12';
-                            e.target.style.boxShadow = '0 0 15px rgba(243, 156, 18, 0.25)';
-                            submitBtn.disabled = false;
-
-                            dateStatus.innerHTML = `
-              <span style="color: #f39c12">
-                This date has restricted time slots. Please check availability for your preferred time.
-              </span>
-              ${dateInfo.note ? `<br><small>Note: ${dateInfo.note}</small>` : ''}
-            `;
-                        } else {
-                            // Entire date is unavailable
-                            e.target.style.borderColor = '#e74c3c';
-                            e.target.style.boxShadow = '0 0 15px rgba(231, 76, 60, 0.25)';
-                            submitBtn.disabled = true;
-
-                            dateStatus.innerHTML = `
-              <span style="color: #e74c3c">
-                This date is completely unavailable.
-              </span>
-              ${dateInfo.note ? `<br><small>Reason: ${dateInfo.note}</small>` : ''}
-            `;
-                        }
-                    } else {
-                        // Date is available
-                        e.target.style.borderColor = '#27ae60';
-                        e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
-                        submitBtn.disabled = false;
-
-                        dateStatus.textContent = 'This date is available';
-                        dateStatus.style.color = '#27ae60';
-                    }
-                } else {
-                    // Date not in cache, assume available
-                    e.target.style.borderColor = '#27ae60';
-                    e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
-                    submitBtn.disabled = false;
-
-                    dateStatus.textContent = 'This date appears available';
-                    dateStatus.style.color = '#27ae60';
-                }
+                dateStatus.innerHTML = `
+                    <span style="color: #e74c3c">
+                        This date is completely unavailable.
+                    </span>
+                    ${dateInfo.note ? `<br><small>Reason: ${dateInfo.note}</small>` : ''}
+                `;
             }
+        } else {
+            // Date is available
+            e.target.style.borderColor = '#27ae60';
+            e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
+            submitBtn.disabled = false;
+            dateStatus.textContent = 'This date is available';
+            dateStatus.style.color = '#27ae60';
+        }
+    } else {
+        // Date not in cache, assume available
+        e.target.style.borderColor = '#27ae60';
+        e.target.style.boxShadow = '0 0 15px rgba(39, 174, 96, 0.25)';
+        submitBtn.disabled = false;
+        dateStatus.textContent = 'This date appears available';
+        dateStatus.style.color = '#27ae60';
+    }
+}
 
-            // Enhanced date availability check
-            async function checkDateAvailability(date) {
-                // First check our local cache
-                if (unavailableDates[date]) {
-                    return unavailableDates[date];
-                }
+// Update initializeDatePicker to be simpler
+function initializeDatePicker() {
+    const dateInput = document.getElementById('date');
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
 
-                // If not in cache, fetch from server (fallback)
-                try {
-                    const response = await fetch(`https://api.dalchiniscotland.com/api/calendar/date/${date}`);
-                    if (!response.ok) throw new Error('Network response was not ok');
+    // Set min date to today
+    dateInput.min = todayString;
 
-                    const data = await response.json();
-                    // Update our local cache
-                    if (data.status === 'unavailable') {
-                        unavailableDates[date] = data;
-                    }
-                    return data;
-                } catch (error) {
-                    console.error('Error checking date availability:', error);
-                    return { status: 'available' };
-                }
-            }
+    // Only use input event for immediate feedback
+    dateInput.addEventListener('input', handleDateSelection);
+    
+    // Use change event for async operations
+    dateInput.addEventListener('change', async function(e) {
+        const selectedDate = e.target.value;
+        if (!selectedDate) return;
 
+        // Ensure we have the latest data for this date
+        const dateInfo = await checkDateAvailability(selectedDate);
+        
+        // Update the local cache
+        if (dateInfo.status === 'unavailable') {
+            unavailableDates[selectedDate] = dateInfo;
+        }
+        
+        // Trigger the date selection handler with updated info
+        handleDateSelection(e);
+    });
+}
+
+// Helper function to show unavailable time slots
+function showUnavailableTimeSlots(unavailableTimes) {
+    const dateInput = document.getElementById('date');
+    const timeSlotsContainer = document.createElement('div');
+    timeSlotsContainer.id = 'unavailableTimesDisplay';
+    timeSlotsContainer.className = 'unavailable-times-container';
+    timeSlotsContainer.style.marginTop = '10px';
+    timeSlotsContainer.style.padding = '10px';
+    timeSlotsContainer.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
+    timeSlotsContainer.style.borderRadius = '5px';
+
+    timeSlotsContainer.innerHTML = `
+        <p style="margin-bottom: 5px; font-size: 0.9rem; color: #f39c12">
+            Unavailable Time Slots:
+        </p>
+        <ul style="list-style-type: none; padding-left: 5px;">
+            ${unavailableTimes.map(time => {
+                const [start, end] = time.includes('-') ? time.split('-') : [time, time];
+                return `
+                    <li style="font-size: 0.85rem; color: #e74c3c">
+                        ${formatTimeForDisplay(start)} - ${formatTimeForDisplay(end)}
+                    </li>
+                `;
+            }).join('')}
+        </ul>
+    `;
+
+    // Insert after the date input
+    dateInput.parentNode.insertBefore(timeSlotsContainer, dateInput.nextSibling);
+}
             // Add a new function to check time slot availability
             function isTimeSlotAvailable(dateInfo, startTime, endTime) {
                 if (!dateInfo || dateInfo.status !== 'unavailable') return true;

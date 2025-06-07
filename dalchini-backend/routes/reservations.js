@@ -78,8 +78,7 @@ const getVerificationEmailTemplate = (name, date, startTime, endTime, persons, p
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #d4af37; margin: 0; font-size: 28px;">Verify Your Email Address</h1>
-        <p style="color: #666; margin-top: 10px;">Complete your reservation at Dalchini Tomintoul</p>
+        <h1 style="color: #d4af37; margin: 0; font-size: 28px;">Booking Your Reservation</h1>
       </div>
 
       <div style="margin: 30px 0; text-align: center;">
@@ -87,8 +86,7 @@ const getVerificationEmailTemplate = (name, date, startTime, endTime, persons, p
           Dear ${name},
         </p>
         <p style="color: #2c3e50; font-size: 16px; line-height: 1.6;">
-          Thank you for your reservation request at Dalchini Tomintoul. 
-          We've successfully received your table booking request and need to verify your email address to proceed.
+          We’ve successfully received your table booking request. Your reservation details have been forwarded to the restaurant team. Once your request is reviewed and confirmed, you will receive a confirmation email at the same email address you provided
         </p>
       </div>
 
@@ -119,16 +117,7 @@ const getVerificationEmailTemplate = (name, date, startTime, endTime, persons, p
         </table>
       </div>
 
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${verificationLink}" 
-           style="display: inline-block; background-color: #d4af37; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; margin: 10px 0;">
-          Verify Email Address
-        </a>
-        <p style="color: #666; font-size: 14px; margin-top: 15px;">
-          Or copy and paste this link in your browser:<br>
-          <a href="${verificationLink}" style="color: #d4af37; word-break: break-all;">${verificationLink}</a>
-        </p>
-      </div>
+    
 
       <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
         <h3 style="color: #2c3e50; margin-top: 0;">What happens next?</h3>
@@ -395,7 +384,7 @@ router.post('/', async (req, res) => {
           await req.transporter.sendMail({
               from: process.env.SMTP_FROM_EMAIL,
               to: email,
-              subject: 'Verify Your Email - Dalchini Tomintoul Reservation',
+              subject: 'Booking - Dalchini Tomintoul Reservation',
               html: getVerificationEmailTemplate(
                   name, 
                   date, 
