@@ -1,5 +1,5 @@
 // Import Dependencies
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
@@ -7,31 +7,35 @@ import { useForm } from "react-hook-form";
 // Local Imports
 import Logo from "/src/assets/appLogo.png";
 import { Button, Card, Checkbox, Input, InputErrorMsg } from "components/ui";
-import { useAuthContext } from "app/contexts/auth/context";
+import { useAuth } from "contexts/AuthContext";
 import { schema } from "./schema";
 import { Page } from "components/shared/Page";
 
 // ----------------------------------------------------------------------
 
 export default function SignIn() {
-  const { login, errorMessage } = useAuthContext();
+  const navigate = useNavigate();
+  const { login, error } = useAuth();
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      username: "username",
-      password: "password",
+      email: "",
+      password: "",
     },
   });
 
-  const onSubmit = (data) => {
-    login({
-      username: data.username,
-      password: data.password,
-    });
+  const onSubmit = async (data) => {
+    try {
+      await login(data.email, data.password);
+      navigate('/dashboard'); // Redirect to dashboard after successful login
+    } catch (err) {
+      // Error is handled by the auth context
+      console.error('Login error:', err);
+    }
   };
 
   return (
@@ -53,16 +57,16 @@ export default function SignIn() {
             <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
               <div className="space-y-4">
                 <Input
-                  label="Username"
-                  placeholder="Enter Username"
+                  label="Email"
+                  placeholder="Enter Email"
                   prefix={
                     <EnvelopeIcon
                       className="size-5 transition-colors duration-200"
                       strokeWidth="1"
                     />
                   }
-                  {...register("username")}
-                  error={errors?.username?.message}
+                  {...register("email")}
+                  error={errors?.email?.message}
                 />
                 <Input
                   label="Password"
@@ -80,25 +84,28 @@ export default function SignIn() {
               </div>
 
               <div className="mt-2">
-                <InputErrorMsg
-                  when={errorMessage && errorMessage?.message !== ""}
-                >
-                  {errorMessage?.message}
+                <InputErrorMsg when={error}>
+                  {error}
                 </InputErrorMsg>
               </div>
 
               <div className="mt-4 flex items-center justify-between space-x-2">
                 <Checkbox label="Remember me" />
-                <a
-                  href="##"
+                <Link
+                  to="/forgot-password"
                   className="text-xs text-gray-400 transition-colors hover:text-gray-800 focus:text-gray-800 dark:text-dark-300 dark:hover:text-dark-100 dark:focus:text-dark-100"
                 >
                   Forgot Password?
-                </a>
+                </Link>
               </div>
 
-              <Button type="submit" className="mt-5 w-full" color="primary">
-                Sign In
+              <Button 
+                type="submit" 
+                className="mt-5 w-full" 
+                color="primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
             <div className="mt-4 text-center text-xs-plus">

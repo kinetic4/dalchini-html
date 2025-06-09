@@ -1,25 +1,22 @@
 // Import Dependencies
 import { Navigate, useLocation, useOutlet } from "react-router";
+import { authService } from "services/authService";
 
 // Local Imports
-import { useAuthContext } from "app/contexts/auth/context";
-import { GHOST_ENTRY_PATH, REDIRECT_URL_KEY } from "../constants/app.constant";
+
 
 // ----------------------------------------------------------------------
 
 export default function AuthGuard() {
   const outlet = useOutlet();
-  const { isAuthenticated } = useAuthContext();
-
   const location = useLocation();
+  const isAuthenticated = authService.isAuthenticated();
 
   if (!isAuthenticated) {
-    return (
-      <Navigate
-        to={`${GHOST_ENTRY_PATH}?${REDIRECT_URL_KEY}=${location.pathname}`}
-        replace
-      />
-    );
+    // Clear any remaining auth data
+    authService.logout();
+    // Redirect to login page
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{outlet}</>;

@@ -2,7 +2,7 @@
 import { RouterProvider } from "react-router";
 
 // Local Imports
-import { AuthProvider } from "app/contexts/auth/Provider";
+import { AuthProvider } from "contexts/AuthContext";
 import { BreakpointProvider } from "app/contexts/breakpoint/Provider";
 import { LocaleProvider } from "app/contexts/locale/Provider";
 import { SidebarProvider } from "app/contexts/sidebar/Provider";

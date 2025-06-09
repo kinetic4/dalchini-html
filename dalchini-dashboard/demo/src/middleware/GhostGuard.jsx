@@ -1,27 +1,18 @@
 // Import Dependencies
 import { Navigate, useOutlet } from "react-router";
-
-// Local Imports
-import { useAuthContext } from "app/contexts/auth/context";
-import { HOME_PATH, REDIRECT_URL_KEY } from "constants/app.constant";
+import { authService } from "services/authService";
 
 // ----------------------------------------------------------------------
 
-
 export default function GhostGuard() {
   const outlet = useOutlet();
-  const { isAuthenticated } = useAuthContext();
+  const isAuthenticated = authService.isAuthenticated();
 
-  const url = `${new URLSearchParams(window.location.search).get(
-    REDIRECT_URL_KEY,
-  )}`;
-
+  // If user is authenticated, redirect to dashboard
   if (isAuthenticated) {
-    if (url && url !== "") {
-      return <Navigate to={url} />;
-    }
-    return <Navigate to={HOME_PATH} />;
+    return <Navigate to="/tables/orders-datatable-1" replace />;
   }
 
+  // If not authenticated, show the login page
   return <>{outlet}</>;
 }

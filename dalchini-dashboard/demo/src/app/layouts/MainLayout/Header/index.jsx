@@ -1,41 +1,58 @@
 // Import Dependencies
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+// import { useNavigate } from "react-router";
+import { authService } from "services/authService";
 
 // Local Imports
-import SearchIcon from "assets/dualicons/search.svg?react";
+// import SearchIcon from "assets/dualicons/search.svg?react";
 import { SidebarToggleBtn } from "components/shared/SidebarToggleBtn";
 import { Button } from "components/ui";
-import { Notifications } from "components/template/Notifications";
-import { RightSidebar } from "components/template/RightSidebar";
-import { LanguageSelector } from "components/template/LaguageSelector";
-import { Search } from "components/template/Search";
+// import { Notifications } from "components/template/Notifications";
+// import { RightSidebar } from "components/template/RightSidebar";
+// import { LanguageSelector } from "components/template/LaguageSelector";
+// import { Search } from "components/template/Search";
 import { useThemeContext } from "app/contexts/theme/context";
+import { Profile } from "../Profile";
 
 // ----------------------------------------------------------------------
 
-function SlashIcon(props) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="20"
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        fill="none"
-        stroke="currentColor"
-        d="M3.5.5h12c1.7 0 3 1.3 3 3v13c0 1.7-1.3 3-3 3h-12c-1.7 0-3-1.3-3-3v-13c0-1.7 1.3-3 3-3z"
-        opacity="0.4"
-      />
-      <path fill="currentColor" d="M11.8 6L8 15.1h-.9L10.8 6h1z" />
-    </svg>
-  );
-}
+// function SlashIcon(props) {
+//   return (
+//     <svg
+//       xmlns="http://www.w3.org/2000/svg"
+//       width="22"
+//       height="20"
+//       aria-hidden="true"
+//       {...props}
+//     >
+//       <path
+//         fill="none"
+//         stroke="currentColor"
+//         d="M3.5.5h12c1.7 0 3 1.3 3 3v13c0 1.7-1.3 3-3 3h-12c-1.7 0-3-1.3-3-3v-13c0-1.7 1.3-3 3-3z"
+//         opacity="0.4"
+//       />
+//       <path fill="currentColor" d="M11.8 6L8 15.1h-.9L10.8 6h1z" />
+//     </svg>
+//   );
+// }
 
 export function Header() {
   const { cardSkin } = useThemeContext();
+  // const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all cached data
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Clear any auth tokens and user data
+    authService.logout();
+    
+    // Force reload the page to clear any in-memory state
+    window.location.href = '/login';
+  };
 
   return (
     <header
@@ -46,38 +63,16 @@ export function Header() {
     >
       <SidebarToggleBtn />
 
-      <div className="flex items-center gap-2 ltr:-mr-1.5 rtl:-ml-1.5">
-        <Search
-          renderButton={(open) => (
-            <>
-              <Button
-                onClick={open}
-                unstyled
-                className="h-8 w-64 justify-between gap-2 rounded-full border border-gray-200 px-3 text-xs-plus hover:border-gray-400 dark:border-dark-500 dark:hover:border-dark-400 max-sm:hidden"
-              >
-                <div className="flex items-center gap-2">
-                  <MagnifyingGlassIcon className="size-4" />
-                  <span className="text-gray-400 dark:text-dark-300">
-                    Search here...
-                  </span>
-                </div>
-                <SlashIcon />
-              </Button>
-
-              <Button
-                onClick={open}
-                variant="flat"
-                isIcon
-                className="relative size-9 rounded-full sm:hidden"
-              >
-                <SearchIcon className="size-6 text-gray-900 dark:text-dark-100" />
-              </Button>
-            </>
-          )}
-        />
-        <Notifications />
-        <RightSidebar />
-        <LanguageSelector />
+      <div className="flex items-center gap-2">
+        <Button
+          variant="flat"
+          className="gap-2"
+          onClick={handleLogout}
+        >
+          <ArrowLeftStartOnRectangleIcon className="size-5" />
+          <span>Logout</span>
+        </Button>
+        <Profile />
       </div>
     </header>
   );

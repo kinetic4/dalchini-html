@@ -3,9 +3,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const helmet = require('helmet');
+
+// Check required environment variables
+const requiredEnvVars = ['JWT_SECRET', 'JWT_EXPIRE', 'MONGODB_URI'];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
+  process.exit(1);
+}
 
 // Initialize express app
 const app = express();
+
+// Security middleware
+app.use(helmet());
 
 // CORS origins from environment or defaults
 const corsOrigins = process.env.CORS_ORIGIN
@@ -118,6 +131,19 @@ try {
     // Create fallback route
     app.get('/api/reservations', (req, res) => {
         res.status(500).json({ error: 'Reservation routes failed to load', details: error.message });
+    });
+}
+
+// Import and use auth routes
+try {
+    const authRoutes = require('./routes/auth');
+    app.use('/api/auth', authRoutes);
+    console.log('✅ Authentication routes loaded successfully');
+} catch (error) {
+    console.error('❌ Error loading authentication routes:', error.message);
+    // Create fallback route
+    app.get('/api/auth', (req, res) => {
+        res.status(500).json({ error: 'Authentication routes failed to load', details: error.message });
     });
 }
 
