@@ -31,7 +31,7 @@ export default function SignIn() {
   const onSubmit = async (data) => {
     try {
       await login(data.email, data.password);
-      navigate('/dashboard'); // Redirect to dashboard after successful login
+      navigate('/tables/orders-datatable-1'); // Redirect to orders table after successful login
     } catch (err) {
       // Error is handled by the auth context
       console.error('Login error:', err);
