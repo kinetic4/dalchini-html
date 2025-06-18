@@ -86,7 +86,7 @@ const getVerificationEmailTemplate = (name, date, startTime, endTime, persons, p
           Dear ${name},
         </p>
         <p style="color: #2c3e50; font-size: 16px; line-height: 1.6;">
-          We’ve successfully received your table booking request. Your reservation details have been forwarded to the restaurant team. Once your request is reviewed and confirmed, you will receive a confirmation email at the same email address you provided
+          We've successfully received your table booking request. Your reservation details have been forwarded to the restaurant team. Once your request is reviewed and confirmed, you will receive a confirmation email at the same email address you provided
         </p>
       </div>
 
@@ -208,22 +208,14 @@ router.post('/test-email', async (req, res) => {
     const { email = 'test@example.com' } = req.body;
     
     console.log('🧪 Testing email to:', email);
-    console.log('📧 SMTP Config:', {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE,
-      user: process.env.SMTP_USER,
-      from: process.env.SMTP_FROM_EMAIL
-    });
 
-    if (!req.transporter) {
-      console.error('❌ No transporter available');
-      return res.status(500).json({ error: 'Email transporter not available' });
+    if (!req.sendEmail) {
+      console.error('❌ No email helper available');
+      return res.status(500).json({ error: 'Email helper not available' });
     }
 
     // Test simple email
     const testEmailData = {
-      from: process.env.SMTP_FROM_EMAIL,
       to: email,
       subject: 'Test Email from Dalchini Tomintoul',
       html: `
@@ -237,7 +229,7 @@ router.post('/test-email', async (req, res) => {
     };
 
     console.log('📤 Sending test email...');
-    const result = await req.transporter.sendMail(testEmailData);
+    const result = await req.sendEmail(testEmailData);
     
     console.log('✅ Test email sent successfully:', {
       messageId: result.messageId,
@@ -251,30 +243,16 @@ router.post('/test-email', async (req, res) => {
       message: 'Test email sent successfully',
       details: {
         messageId: result.messageId,
-        accepted: result.accepted,
-        rejected: result.rejected,
-        to: email
+        response: result.response
       }
     });
 
   } catch (error) {
-    console.error('❌ Test email failed:', {
-      message: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
-    });
-
+    console.error('❌ Error sending test email:', error);
     res.status(500).json({
       success: false,
       error: error.message,
-      details: {
-        code: error.code,
-        command: error.command,
-        response: error.response,
-        responseCode: error.responseCode
-      }
+      details: error
     });
   }
 });
@@ -282,44 +260,60 @@ router.post('/test-email', async (req, res) => {
 // Email verification route - SPECIFIC ROUTE
 router.post('/verify/:token', async (req, res) => {
   try {
-      console.log('Verifying token:', req.params.token);
-      const reservation = await Reservation.findOne({ verificationToken: req.params.token });
+    const { token } = req.params;
+    const reservation = await Reservation.findOne({
+      verificationToken: token,
+      verificationExpires: { $gt: Date.now() }
+    });
 
-      if (!reservation) {
-          console.log('No reservation found for token:', req.params.token);
-          return res.status(404).json({ error: 'Invalid verification token' });
-      }
+    if (!reservation) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired verification token'
+      });
+    }
 
-      if (reservation.isVerified) {
-          console.log('Reservation already verified:', reservation._id);
-          return res.status(400).json({ error: 'Reservation already verified' });
-      }
+    // Update reservation status
+    reservation.status = 'confirmed';
+    reservation.verified = true;
+    reservation.verificationToken = undefined;
+    reservation.verificationExpires = undefined;
+    await reservation.save();
 
-      reservation.isVerified = true;
-      reservation.verificationToken = null;
-      await reservation.save();
-      console.log('Reservation verified successfully:', reservation._id);
+    // Send confirmation email
+    const formattedDate = new Date(reservation.date).toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
 
-      // Send a simple HTML response for better user experience
-      res.send(`
-          <html>
-              <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-                  <h2 style="color: #d4af37;">Email Verified Successfully!</h2>
-                  <p>Your reservation has been verified. You will receive a confirmation email once your reservation is approved.</p>
-                  <p>Thank you for choosing Dalchini Tomintoul!</p>
-              </body>
-          </html>
-      `);
+    const emailHtml = getConfirmationEmailTemplate(
+      reservation.name,
+      formattedDate,
+      reservation.startTime,
+      reservation.endTime,
+      reservation.persons,
+      reservation.phone
+    );
+
+    await req.sendEmail({
+      to: reservation.email,
+      subject: 'Your Dalchini Tomintoul Reservation is Confirmed',
+      html: emailHtml
+    });
+
+    res.json({
+      success: true,
+      message: 'Reservation verified and confirmed'
+    });
+
   } catch (error) {
-      console.error('Error verifying reservation:', error);
-      res.status(500).send(`
-          <html>
-              <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
-                  <h2 style="color: #dc3545;">Verification Failed</h2>
-                  <p>An error occurred while verifying your reservation. Please contact us directly.</p>
-              </body>
-          </html>
-      `);
+    console.error('Error verifying reservation:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
@@ -348,67 +342,67 @@ router.get('/date-range/:startDate/:endDate', async (req, res) => {
 
 // Create a new reservation
 router.post('/', async (req, res) => {
-  try {
-      const {
-          name,
-          phone,
-          email,
-          persons,
-          date,
-          startTime,
-          endTime
-      } = req.body;
+    try {
+        const { name, email, phone, date, startTime, endTime, persons } = req.body;
 
-      // Generate verification token
-      const verificationToken = crypto.randomBytes(32).toString('hex');
+        // Create verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-      const reservation = new Reservation({
-          name,
-          phone,
-          email,
-          persons,
-          date,
-          startTime,
-          endTime,
-          verificationToken,
-          status: 'pending'
-      });
+        // Create reservation
+        const reservation = new Reservation({
+            name,
+            email,
+            phone,
+            date,
+            startTime,
+            endTime,
+            persons,
+            verificationToken,
+            verificationExpires,
+            status: 'pending'
+        });
 
-      await reservation.save();
-      console.log('New reservation created:', reservation);
+        await reservation.save();
+        console.log('New reservation created:', reservation._id);
 
-      // Send verification email with enhanced template
-      try {
-          const verificationLink = `${process.env.BACKEND_URL}/api/reservations/verify/${verificationToken}`;
+        // Send verification email
+        const verificationLink = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
+        const emailHtml = getVerificationEmailTemplate(
+            name,
+            date,
+            startTime,
+            endTime,
+            persons,
+            phone,
+            verificationLink
+        );
 
-          await req.transporter.sendMail({
-              from: process.env.SMTP_FROM_EMAIL,
-              to: email,
-              subject: 'Booking - Dalchini Tomintoul Reservation',
-              html: getVerificationEmailTemplate(
-                  name, 
-                  date, 
-                  startTime, 
-                  endTime, 
-                  persons, 
-                  phone, 
-                  verificationLink
-              )
-          });
-          console.log('Verification email sent to:', email);
-      } catch (emailError) {
-          console.error('Error sending verification email:', emailError);
-      }
+        try {
+            await req.sendEmail({
+                to: email,
+                subject: 'Verify Your Dalchini Tomintoul Reservation',
+                html: emailHtml
+            });
+            console.log('Verification email sent to:', email);
+        } catch (emailError) {
+            console.error('Error sending verification email:', emailError);
+            // Don't fail the request if email fails
+        }
 
-      res.status(201).json({
-          message: 'Reservation created successfully',
-          reservation,
-          verificationToken
-      });
-  } catch (error) {
-      console.error('Error creating reservation:', error);
-      res.status(400).json({ error: error.message });
-  }
+        res.status(201).json({
+            success: true,
+            message: 'Reservation request received',
+            verificationToken
+        });
+
+    } catch (error) {
+        console.error('Error creating reservation:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
 // Get all reservations

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const helmet = require('helmet');
+const crypto = require('crypto');
 
 // Check required environment variables
 const requiredEnvVars = ['JWT_SECRET', 'JWT_EXPIRE', 'MONGODB_URI'];
@@ -53,10 +54,13 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
+    tls: {
+        // Do not fail on invalid certs
+        rejectUnauthorized: false
+    }
 });
 
 // Verify transporter connection
-// After creating the transporter
 transporter.verify(function(error, success) {
     if (error) {
       console.error('SMTP Connection Error:', {
@@ -69,11 +73,31 @@ transporter.verify(function(error, success) {
     } else {
       console.log('SMTP Server is ready to take our messages');
     }
-  });
+});
 
-// FIXED: Attach transporter to request object - moved after transporter creation
+// Simple email sending helper function
+const sendEmail = async (options) => {
+    const mailOptions = {
+        from: `"Dalchini Tomintoul" <${process.env.SMTP_FROM_EMAIL}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully:', info.messageId);
+        return info;
+    } catch (error) {
+        console.error('Error sending email:', error);
+        throw error;
+    }
+};
+
+// Attach both transporter and sendEmail helper to request object
 app.use((req, res, next) => {
     req.transporter = transporter;
+    req.sendEmail = sendEmail;
     next();
 });
 
